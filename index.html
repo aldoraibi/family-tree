@@ -38,7 +38,7 @@
 
   .node { cursor: pointer; }
   .nname { font: 500 15px 'Tajawal', sans-serif; fill: #3b2a12; paint-order: stroke; stroke: #fdf8ec; stroke-width: 4px; stroke-linejoin: round; }
-  .rootname { font: 700 58px 'Aref Ruqaa', serif; fill: #2b1a07; }
+  .rootname { font: 700 52px 'Aref Ruqaa', serif; fill: #2b1a07; }
   .cartouche-t { font: 700 46px 'Aref Ruqaa', serif; fill: #f3dfae; }
   .hint { font: 24px 'Tajawal', sans-serif; fill: #a3947a; }
 
@@ -379,19 +379,18 @@ const SCENE_DEFS = '<defs>' +
   '</defs>';
 
 function branchShape(pp, cp, w0, w1) {
-  const mx = (pp.x + cp.x) / 2, my = (pp.y + cp.y) / 2;
+  // غصن ينمو للأعلى من الأب ثم ينحني نحو الابن ويصله من الأسفل (منحنى تكعيبي)
   const dx = cp.x - pp.x, dy = cp.y - pp.y;
-  const n = Math.hypot(dx, dy) || 1;
-  const sgn = cp.x < pp.x ? 1 : -1;
-  const off = Math.abs(dx) < 2 ? 0 : Math.min(34, n * 0.22) * sgn;
-  const qx = mx - dy / n * off, qy = my + dx / n * off;
-  const N = 7, Lp = [], Rp = [];
+  const L = Math.hypot(dx, dy) || 1;
+  const p1 = { x: pp.x + dx * 0.06, y: pp.y - L * 0.38 };
+  const p2 = { x: cp.x - dx * 0.14, y: cp.y + L * 0.34 };
+  const N = 8, Lp = [], Rp = [];
   for (let i = 0; i <= N; i++) {
-    const t = i / N;
-    const x = (1 - t) * (1 - t) * pp.x + 2 * (1 - t) * t * qx + t * t * cp.x;
-    const y = (1 - t) * (1 - t) * pp.y + 2 * (1 - t) * t * qy + t * t * cp.y;
-    const tx = 2 * (1 - t) * (qx - pp.x) + 2 * t * (cp.x - qx);
-    const ty = 2 * (1 - t) * (qy - pp.y) + 2 * t * (cp.y - qy);
+    const t = i / N, mt = 1 - t;
+    const x = mt * mt * mt * pp.x + 3 * mt * mt * t * p1.x + 3 * mt * t * t * p2.x + t * t * t * cp.x;
+    const y = mt * mt * mt * pp.y + 3 * mt * mt * t * p1.y + 3 * mt * t * t * p2.y + t * t * t * cp.y;
+    const tx = 3 * mt * mt * (p1.x - pp.x) + 6 * mt * t * (p2.x - p1.x) + 3 * t * t * (cp.x - p2.x);
+    const ty = 3 * mt * mt * (p1.y - pp.y) + 6 * mt * t * (p2.y - p1.y) + 3 * t * t * (cp.y - p2.y);
     const tn = Math.hypot(tx, ty) || 1;
     const w = (w0 + (w1 - w0) * t) / 2;
     Lp.push((x - ty / tn * w).toFixed(1) + ',' + (y + tx / tn * w).toFixed(1));
@@ -403,13 +402,20 @@ function branchShape(pp, cp, w0, w1) {
 function branchesSVG(id) {
   let s = '';
   const pp = positions[id];
+  let sideR = 0, sideL = 0;
   for (const k of childrenOf(id)) {
     const cp = positions[k.id];
     const lc = leafCount(k.id);
     const isTrunkExt = (id === 'root' && k.id === trunkHeirId);
-    const w0 = isTrunkExt ? 66 : Math.min(22, 4 + 3.4 * Math.sqrt(lc));
-    const w1 = isTrunkExt ? 32 : Math.max(2.6, w0 * 0.4);
-    s += branchShape(pp, cp, w0, w1) + branchesSVG(k.id);
+    // فروع الجذر الجانبية تنبثق من ارتفاعات مختلفة على الجذع كما في اللوحة
+    let start = pp;
+    if (id === 'root' && !isTrunkExt) {
+      if (cp.x >= pp.x) { start = { x: pp.x + 42, y: pp.y + 65 + sideR * 75 }; sideR++; }
+      else { start = { x: pp.x - 42, y: pp.y + 100 + sideL * 75 }; sideL++; }
+    }
+    const w0 = isTrunkExt ? 74 : Math.min(26, 5 + 3.8 * Math.sqrt(lc));
+    const w1 = isTrunkExt ? 34 : Math.max(3, w0 * 0.42);
+    s += branchShape(start, cp, w0, w1) + branchesSVG(k.id);
   }
   return s;
 }
@@ -424,21 +430,38 @@ function rndGen(seed) {
 }
 function foliageSVG() {
   let s = '';
+  const pinks = ['#f6c1d4', '#f0a8c4', '#eb93b7', '#f3d3de'];
   for (const p of Object.values(data.persons)) {
-    if (p.id === 'root' || childrenOf(p.id).length) continue;
+    if (p.id === 'root') continue;
     const pos = positions[p.id];
     if (!pos) continue;
     const rnd = rndGen(p.id);
     const g = genOf(p.id);
-    const k = 3 + Math.floor(rnd() * 3);
-    for (let i = 0; i < k; i++) {
-      const a = rnd() * Math.PI * 2, rr = 18 + rnd() * 22;
-      const x = pos.x + Math.cos(a) * rr, y = pos.y - 6 + Math.sin(a) * rr * 0.8;
-      if (g >= 6 && p.gender !== 'f') {
-        s += '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="' + (5 + rnd() * 6).toFixed(1) + '" fill="#f2b7cd" opacity="0.45"/>';
-      } else {
+    const terminal = childrenOf(p.id).length === 0;
+    if (terminal && g >= 6 && p.gender !== 'f') {
+      // كتلة زهور وردية كثيفة حول أطراف الأغصان كما في اللوحة
+      const k = 9 + Math.floor(rnd() * 5);
+      for (let i = 0; i < k; i++) {
+        const a = rnd() * Math.PI * 2, rr = 10 + rnd() * 28;
+        const x = pos.x + Math.cos(a) * rr, y = pos.y - 6 + Math.sin(a) * rr * 0.85;
+        const c = pinks[Math.floor(rnd() * pinks.length)];
+        s += '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="' + (5.5 + rnd() * 7).toFixed(1) + '" fill="' + c + '" opacity="' + (0.5 + rnd() * 0.3).toFixed(2) + '"/>';
+      }
+    } else if (terminal) {
+      const k = 4 + Math.floor(rnd() * 3);
+      for (let i = 0; i < k; i++) {
+        const a = rnd() * Math.PI * 2, rr = 16 + rnd() * 20;
+        const x = pos.x + Math.cos(a) * rr, y = pos.y - 5 + Math.sin(a) * rr * 0.8;
         const rot = (rnd() * 180).toFixed(0);
-        s += '<ellipse cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" rx="8" ry="3.6" transform="rotate(' + rot + ' ' + x.toFixed(1) + ' ' + y.toFixed(1) + ')" fill="#a9c187" opacity="0.5"/>';
+        s += '<ellipse cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" rx="9" ry="4" transform="rotate(' + rot + ' ' + x.toFixed(1) + ' ' + y.toFixed(1) + ')" fill="#a9c187" opacity="0.55"/>';
+      }
+    } else {
+      // ورقتان صغيرتان عند كل مفترق غصن
+      for (let i = 0; i < 2; i++) {
+        const a = rnd() * Math.PI * 2, rr = 20 + rnd() * 14;
+        const x = pos.x + Math.cos(a) * rr, y = pos.y + Math.sin(a) * rr * 0.7;
+        const rot = (rnd() * 180).toFixed(0);
+        s += '<ellipse cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" rx="8" ry="3.6" transform="rotate(' + rot + ' ' + x.toFixed(1) + ' ' + y.toFixed(1) + ')" fill="#a9c187" opacity="0.45"/>';
       }
     }
   }
@@ -490,9 +513,9 @@ function trunkSVG() {
     : '';
   return '<g class="node" data-id="root">' +
     '<g transform="translate(' + (CX - 800) + ',0)">' +
-    '<ellipse cx="800" cy="2012" rx="310" ry="24" fill="#00000014"/>' +
-    '<path d="M645,2015 C700,1995 730,1975 742,1925 C763,1835 752,1620 757,1450 C760,1385 757,1348 760,1330 L840,1330 C843,1348 840,1385 843,1450 C848,1620 837,1835 858,1925 C870,1975 900,1995 955,2015 C905,2002 862,2008 800,2008 C738,2008 695,2002 645,2015 Z" fill="url(#barkGrad)" stroke="#4c2f12" stroke-width="3"/>' +
-    '<path d="M775,1965 C779,1830 783,1640 786,1420 M822,1970 C817,1845 812,1650 809,1430 M797,1990 C798,1930 799,1870 799,1810" fill="none" stroke="#5e3a17" stroke-width="2.5" opacity="0.35"/>' +
+    '<ellipse cx="800" cy="2012" rx="330" ry="26" fill="#00000014"/>' +
+    '<path d="M600,2016 C670,1998 712,1968 728,1912 C748,1826 735,1610 738,1460 C740,1390 745,1350 748,1330 L852,1330 C855,1350 860,1390 862,1460 C865,1610 852,1826 872,1912 C888,1968 930,1998 1000,2016 C930,2002 868,2009 800,2009 C732,2009 670,2002 600,2016 Z" fill="url(#barkGrad)" stroke="#4c2f12" stroke-width="3"/>' +
+    '<path d="M770,1960 C775,1820 780,1630 783,1420 M828,1965 C822,1840 816,1650 813,1430 M797,1988 C798,1925 799,1865 799,1805" fill="none" stroke="#5e3a17" stroke-width="2.5" opacity="0.35"/>' +
     '</g>' +
     names + ring + '</g>';
 }
@@ -791,7 +814,7 @@ $('btnPNG').addEventListener('click', () => {
   selectedId = null;
   const inner = buildScene();
   selectedId = keep;
-  const style = '<style>.nname{font:500 15px Tajawal,sans-serif;fill:#3b2a12;paint-order:stroke;stroke:#fdf8ec;stroke-width:4px;stroke-linejoin:round}.rootname{font:700 58px "Aref Ruqaa",serif;fill:#2b1a07}.cartouche-t{font:700 46px "Aref Ruqaa",serif;fill:#f3dfae}.hint{font:24px Tajawal,sans-serif;fill:#a3947a}</style>';
+  const style = '<style>.nname{font:500 15px Tajawal,sans-serif;fill:#3b2a12;paint-order:stroke;stroke:#fdf8ec;stroke-width:4px;stroke-linejoin:round}.rootname{font:700 52px "Aref Ruqaa",serif;fill:#2b1a07}.cartouche-t{font:700 46px "Aref Ruqaa",serif;fill:#f3dfae}.hint{font:24px Tajawal,sans-serif;fill:#a3947a}</style>';
   const svgStr = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + W + ' ' + H + '" width="' + W + '" height="' + H + '">' +
     style +
     '<rect width="' + W + '" height="' + H + '" fill="#efe9db"/>' + inner + '</svg>';
