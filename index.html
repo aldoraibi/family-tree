@@ -166,7 +166,7 @@
 
 /* ---------- الثوابت ---------- */
 const LS_KEY = 'shajara-v2';
-const W = 1600, H = 2200, CX = 800;
+const W = 1900, H = 2200, CX = 950;
 const TRUNK_TOP = { x: CX, y: 1330 };
 const STEPS = { 2: 245, 3: 215, 4: 195, 5: 175, 6: 155, 7: 135, 8: 120 };
 const SHAPE_NAMES = { 2: 'سحابة', 3: 'دائرة', 4: 'سداسي', 5: 'مربع', 6: 'مثلث', 7: 'زهرة وردية' };
@@ -244,22 +244,96 @@ function lineage(id) {
 function layout() {
   positions = { root: { x: TRUNK_TOP.x, y: TRUNK_TOP.y } };
   assignAngles('root', 28, 152);
+  resolveCollisions();
+}
+function resolveCollisions() {
+  const ids = Object.keys(positions).filter(id => id !== 'root');
+  const MIN = 64;
+  for (let it = 0; it < 60; it++) {
+    let moved = false;
+    for (let i = 0; i < ids.length; i++) {
+      for (let j = i + 1; j < ids.length; j++) {
+        const A = positions[ids[i]], B = positions[ids[j]];
+        let dx = B.x - A.x, dy = B.y - A.y;
+        let d = Math.hypot(dx, dy);
+        if (d < 1) { dx = 1; dy = 0; d = 1; }
+        if (d < MIN) {
+          const push = (MIN - d) / 2;
+          const ux = dx / d, uy = dy / d;
+          A.x -= ux * push; A.y -= uy * push;
+          B.x += ux * push; B.y += uy * push;
+          moved = true;
+        }
+      }
+    }
+    for (const id of ids) {
+      const per = data.persons[id];
+      const pp = positions[per.parentId];
+      const me = positions[id];
+      if (!pp) continue;
+      let dx = me.x - pp.x, dy = me.y - pp.y;
+      let d = Math.hypot(dx, dy) || 1;
+      if (d > 330) { me.x = pp.x + dx / d * 330; me.y = pp.y + dy / d * 330; }
+      else if (d < 58) { me.x = pp.x + dx / d * 58; me.y = pp.y + dy / d * 58; }
+      me.x = clamp(me.x, 75, W - 75);
+      me.y = clamp(me.y, 85, H - 260);
+    }
+    if (!moved) break;
+  }
 }
 function assignAngles(id, a0, a1) {
   const kids = childrenOf(id);
   if (!kids.length) return;
-  const total = kids.reduce((s, k) => s + leafCount(k.id), 0);
+  const pp0 = positions[id];
+  const branchKids = kids.filter(k => childrenOf(k.id).length > 0);
+  const leafKids = kids.filter(k => childrenOf(k.id).length === 0);
+
+  if (!branchKids.length) {
+    // كل الأبناء أوراق طرفية: مروحة بزاوية مضمونة
+    const mid = (a0 + a1) / 2;
+    const spread = kids.length > 1
+      ? Math.min(105, 26 * (kids.length - 1), Math.max((a1 - a0) * 1.5, 20))
+      : 0;
+    let ang = mid - spread / 2;
+    const step = kids.length > 1 ? spread / (kids.length - 1) : 0;
+    let j = 0;
+    for (const k of kids) {
+      const g = genOf(k.id);
+      const r = (STEPS[g] || 112) + (j % 2) * 52;
+      positions[k.id] = { x: pp0.x + r * Math.cos(rad(ang)), y: pp0.y - r * Math.sin(rad(ang)) };
+      ang += step;
+      j++;
+    }
+    return;
+  }
+
+  // أبناء بلا ذرية وسط إخوة لهم ذرية: أغصان قصيرة قرب الأب
+  if (leafKids.length) {
+    const mid = (a0 + a1) / 2;
+    const spread = leafKids.length > 1 ? Math.min(140, 30 * (leafKids.length - 1)) : 0;
+    let ang = mid - spread / 2;
+    const step = leafKids.length > 1 ? spread / (leafKids.length - 1) : 0;
+    let j = 0;
+    for (const k of leafKids) {
+      const r = 92 + (j % 2) * 48;
+      positions[k.id] = { x: pp0.x + r * Math.cos(rad(ang)), y: pp0.y - r * Math.sin(rad(ang)) };
+      ang += step;
+      j++;
+    }
+  }
+
+  const wts = branchKids.map(k => leafCount(k.id) + 1.5);
+  const total = wts.reduce((s, w) => s + w, 0);
   let a = a0;
   let i = 0;
-  for (const k of kids) {
-    const span = (a1 - a0) * leafCount(k.id) / total;
+  for (const k of branchKids) {
+    const span = (a1 - a0) * wts[i] / total;
     const mid = a + span / 2;
     const g = genOf(k.id);
     const r = (STEPS[g] || 112) + (i % 2) * 46;
-    const pp = positions[id];
     positions[k.id] = {
-      x: pp.x + r * Math.cos(rad(mid)),
-      y: pp.y - r * Math.sin(rad(mid))
+      x: pp0.x + r * Math.cos(rad(mid)),
+      y: pp0.y - r * Math.sin(rad(mid))
     };
     assignAngles(k.id, a, a + span);
     a += span;
@@ -335,8 +409,10 @@ function trunkSVG() {
     ? '<rect x="' + (CX - 110) + '" y="1355" width="220" height="' + Math.max(130, words.length * 92 + 36) + '" fill="none" stroke="#d97706" stroke-width="3" stroke-dasharray="8 6" rx="14"/>'
     : '';
   return '<g class="node" data-id="root">' +
+    '<g transform="translate(' + (CX - 800) + ',0)">' +
     '<path d="M690,2010 C720,1955 746,1800 756,1600 C761,1470 763,1380 763,1330 L837,1330 C837,1380 839,1470 844,1600 C854,1800 880,1955 910,2010 C860,2000 830,2004 800,2004 C770,2004 740,2000 690,2010 Z" fill="url(#barkGrad)" stroke="#5e3a17" stroke-width="3"/>' +
     '<path d="M780,1950 C782,1800 786,1600 788,1400 M818,1960 C814,1820 810,1620 808,1420" fill="none" stroke="#734a1e" stroke-width="2" opacity="0.5"/>' +
+    '</g>' +
     names + ring + '</g>';
 }
 function buildScene() {
