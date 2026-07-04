@@ -37,7 +37,7 @@
   #svg:active { cursor: grabbing; }
 
   .node { cursor: pointer; }
-  .nname { font: 500 15px 'Tajawal', sans-serif; fill: #3b2a12; paint-order: stroke; stroke: #fdf8ec; stroke-width: 4px; stroke-linejoin: round; }
+  .nname { font: 500 13px 'Tajawal', sans-serif; fill: #3b2a12; paint-order: stroke; stroke: #fdf8ec; stroke-width: 3.5px; stroke-linejoin: round; }
   .rootname { font: 700 52px 'Aref Ruqaa', serif; fill: #2b1a07; }
   .cartouche-t { font: 700 46px 'Aref Ruqaa', serif; fill: #f3dfae; }
   .hint { font: 24px 'Tajawal', sans-serif; fill: #a3947a; }
@@ -163,7 +163,7 @@
 const LS_KEY = 'shajara-v3';
 const W = 1900, H = 2200, CX = 950;
 const TRUNK_TOP = { x: CX, y: 1330 };
-const STEPS = { 2: 245, 3: 215, 4: 195, 5: 175, 6: 155, 7: 135, 8: 120 };
+const STEPS = { 2: 200, 3: 170, 4: 150, 5: 132, 6: 118, 7: 106, 8: 98 };
 const SHAPE_NAMES = { 2: 'سحابة', 3: 'دائرة', 4: 'سداسي', 5: 'مربع', 6: 'مثلث', 7: 'زهرة وردية' };
 const ORDINALS = ['', 'الأول', 'الثاني', 'الثالث', 'الرابع', 'الخامس', 'السادس', 'السابع', 'الثامن', 'التاسع', 'العاشر', 'الحادي عشر', 'الثاني عشر'];
 
@@ -246,12 +246,12 @@ function layout() {
     if (!heir) heir = kids.reduce((b, k) => leafCount(k.id) > leafCount(b.id) ? k : b, kids[0]);
     trunkHeirId = heir.id;
   }
-  assignAngles('root', 28, 152);
+  assignAngles('root', 18, 162);
   resolveCollisions();
 }
 function resolveCollisions() {
   const ids = Object.keys(positions).filter(id => id !== 'root');
-  const MIN = 64;
+  const MIN = 56;
   for (let it = 0; it < 60; it++) {
     let moved = false;
     for (let i = 0; i < ids.length; i++) {
@@ -276,7 +276,7 @@ function resolveCollisions() {
       if (!pp) continue;
       let dx = me.x - pp.x, dy = me.y - pp.y;
       let d = Math.hypot(dx, dy) || 1;
-      if (d > 330) { me.x = pp.x + dx / d * 330; me.y = pp.y + dy / d * 330; }
+      if (d > 250) { me.x = pp.x + dx / d * 250; me.y = pp.y + dy / d * 250; }
       else if (d < 58) { me.x = pp.x + dx / d * 58; me.y = pp.y + dy / d * 58; }
       me.x = clamp(me.x, 90, W - 90);
       me.y = clamp(me.y, 215, H - 280);
@@ -284,7 +284,7 @@ function resolveCollisions() {
     // تثبيت وريث الجذع على محور الجذع
     if (trunkHeirId && positions[trunkHeirId]) {
       positions[trunkHeirId].x = TRUNK_TOP.x;
-      positions[trunkHeirId].y = TRUNK_TOP.y - 168;
+      positions[trunkHeirId].y = TRUNK_TOP.y - 150;
     }
     if (!moved) break;
   }
@@ -332,7 +332,7 @@ function assignAngles(id, a0, a1) {
     const step = leafKids.length > 1 ? spread / (leafKids.length - 1) : 0;
     let j = 0;
     for (const k of leafKids) {
-      const r = 92 + (j % 2) * 48;
+      const r = 80 + (j % 2) * 44;
       positions[k.id] = { x: pp0.x + r * Math.cos(rad(ang)), y: pp0.y - r * Math.sin(rad(ang)) };
       ang += step;
       j++;
@@ -347,7 +347,7 @@ function assignAngles(id, a0, a1) {
     const span = (a1 - a0) * wts[i] / total;
     const mid = a + span / 2;
     if (id === 'root' && k.id === trunkHeirId) {
-      positions[k.id] = { x: pp0.x, y: pp0.y - 168 };
+      positions[k.id] = { x: pp0.x, y: pp0.y - 150 };
     } else {
       const g = genOf(k.id);
       const r = (STEPS[g] || 112) + (i % 2) * 46;
@@ -413,8 +413,10 @@ function branchesSVG(id) {
       if (cp.x >= pp.x) { start = { x: pp.x + 42, y: pp.y + 65 + sideR * 75 }; sideR++; }
       else { start = { x: pp.x - 42, y: pp.y + 100 + sideL * 75 }; sideL++; }
     }
-    const w0 = isTrunkExt ? 74 : Math.min(26, 5 + 3.8 * Math.sqrt(lc));
-    const w1 = isTrunkExt ? 34 : Math.max(3, w0 * 0.42);
+    let w0, w1;
+    if (isTrunkExt) { w0 = 74; w1 = 34; }
+    else if (id === 'root') { w0 = Math.min(36, 12 + 4.2 * Math.sqrt(lc)); w1 = w0 * 0.5; }
+    else { w0 = Math.min(24, 5 + 3.6 * Math.sqrt(lc)); w1 = Math.max(3, w0 * 0.42); }
     s += branchShape(start, cp, w0, w1) + branchesSVG(k.id);
   }
   return s;
@@ -440,9 +442,9 @@ function foliageSVG() {
     const terminal = childrenOf(p.id).length === 0;
     if (terminal && g >= 6 && p.gender !== 'f') {
       // كتلة زهور وردية كثيفة حول أطراف الأغصان كما في اللوحة
-      const k = 9 + Math.floor(rnd() * 5);
+      const k = 12 + Math.floor(rnd() * 6);
       for (let i = 0; i < k; i++) {
-        const a = rnd() * Math.PI * 2, rr = 10 + rnd() * 28;
+        const a = rnd() * Math.PI * 2, rr = 8 + rnd() * 32;
         const x = pos.x + Math.cos(a) * rr, y = pos.y - 6 + Math.sin(a) * rr * 0.85;
         const c = pinks[Math.floor(rnd() * pinks.length)];
         s += '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="' + (5.5 + rnd() * 7).toFixed(1) + '" fill="' + c + '" opacity="' + (0.5 + rnd() * 0.3).toFixed(2) + '"/>';
@@ -498,7 +500,7 @@ function shapeSVG(p) {
   const ring = sel ? '<circle r="31" fill="none" stroke="#d97706" stroke-width="3" stroke-dasharray="6 4"/>' : '';
   return '<g class="node" data-id="' + p.id + '" transform="translate(' + pos.x.toFixed(1) + ',' + pos.y.toFixed(1) + ')">' +
     ring + '<g filter="url(#softsh)">' + shape + '</g>' +
-    '<text y="36" text-anchor="middle" class="nname">' + esc(p.name) + '</text></g>';
+    '<text y="32" text-anchor="middle" class="nname">' + esc(p.name) + '</text></g>';
 }
 function trunkSVG() {
   const sel = selectedId === 'root';
@@ -814,7 +816,7 @@ $('btnPNG').addEventListener('click', () => {
   selectedId = null;
   const inner = buildScene();
   selectedId = keep;
-  const style = '<style>.nname{font:500 15px Tajawal,sans-serif;fill:#3b2a12;paint-order:stroke;stroke:#fdf8ec;stroke-width:4px;stroke-linejoin:round}.rootname{font:700 52px "Aref Ruqaa",serif;fill:#2b1a07}.cartouche-t{font:700 46px "Aref Ruqaa",serif;fill:#f3dfae}.hint{font:24px Tajawal,sans-serif;fill:#a3947a}</style>';
+  const style = '<style>.nname{font:500 13px Tajawal,sans-serif;fill:#3b2a12;paint-order:stroke;stroke:#fdf8ec;stroke-width:3.5px;stroke-linejoin:round}.rootname{font:700 52px "Aref Ruqaa",serif;fill:#2b1a07}.cartouche-t{font:700 46px "Aref Ruqaa",serif;fill:#f3dfae}.hint{font:24px Tajawal,sans-serif;fill:#a3947a}</style>';
   const svgStr = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + W + ' ' + H + '" width="' + W + '" height="' + H + '">' +
     style +
     '<rect width="' + W + '" height="' + H + '" fill="#efe9db"/>' + inner + '</svg>';
