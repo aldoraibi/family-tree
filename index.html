@@ -243,18 +243,19 @@ function lineage(id) {
 /* ---------- التخطيط ---------- */
 function layout() {
   positions = { root: { x: TRUNK_TOP.x, y: TRUNK_TOP.y } };
-  assignAngles('root', 35, 145);
+  assignAngles('root', 28, 152);
 }
 function assignAngles(id, a0, a1) {
   const kids = childrenOf(id);
   if (!kids.length) return;
   const total = kids.reduce((s, k) => s + leafCount(k.id), 0);
   let a = a0;
+  let i = 0;
   for (const k of kids) {
     const span = (a1 - a0) * leafCount(k.id) / total;
     const mid = a + span / 2;
     const g = genOf(k.id);
-    const r = STEPS[g] || 112;
+    const r = (STEPS[g] || 112) + (i % 2) * 46;
     const pp = positions[id];
     positions[k.id] = {
       x: pp.x + r * Math.cos(rad(mid)),
@@ -262,6 +263,7 @@ function assignAngles(id, a0, a1) {
     };
     assignAngles(k.id, a, a + span);
     a += span;
+    i++;
   }
 }
 
