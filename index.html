@@ -78,6 +78,12 @@
   .mbtns { display: flex; gap: 8px; justify-content: flex-start; }
   .hidden { display: none !important; }
 
+  #moveBanner {
+    position: fixed; top: 52px; right: 50%; transform: translateX(50%);
+    z-index: 25; background: #d97706; color: #fff; font-size: 13px;
+    padding: 8px 16px; border-radius: 0 0 10px 10px; box-shadow: 0 3px 10px #0003;
+  }
+
   @media (max-width: 600px) {
     #panel { width: calc(100% - 28px); top: auto; bottom: 12px; }
     #legend { display: none; }
@@ -119,6 +125,7 @@
   <div class="pbtns">
     <button id="btnAddChild" class="primary">إضافة ابن / ابنة</button>
     <button id="btnEdit">تعديل</button>
+    <button id="btnMove">نقل لأب آخر</button>
     <button id="btnDelete">حذف</button>
     <button id="btnClose">إغلاق</button>
   </div>
@@ -150,13 +157,15 @@
   </div>
 </div>
 
+<div id="moveBanner" class="hidden">وضع النقل: انقر على الأب الجديد في الشجرة — أو انقر مكاناً فارغاً للإلغاء</div>
+
 <input type="file" id="importFile" accept=".json,application/json" hidden>
 
 <script>
 'use strict';
 
 /* ---------- الثوابت ---------- */
-const LS_KEY = 'shajara-v1';
+const LS_KEY = 'shajara-v2';
 const W = 1600, H = 2200, CX = 800;
 const TRUNK_TOP = { x: CX, y: 1330 };
 const STEPS = { 2: 245, 3: 215, 4: 195, 5: 175, 6: 155, 7: 135, 8: 120 };
@@ -164,11 +173,9 @@ const SHAPE_NAMES = { 2: 'سحابة', 3: 'دائرة', 4: 'سداسي', 5: 'م�
 const ORDINALS = ['', 'الأول', 'الثاني', 'الثالث', 'الرابع', 'الخامس', 'السادس', 'السابع', 'الثامن', 'التاسع', 'العاشر', 'الحادي عشر', 'الثاني عشر'];
 
 /* ---------- البيانات ---------- */
+const SEED = {"persons":{"root":{"id":"root","name":"مهدي حسن دريبي حسن","gender":"m","parentId":null,"seq":0},"p1":{"id":"p1","name":"سعيد","gender":"m","parentId":"root","seq":1},"p2":{"id":"p2","name":"عطيه","gender":"m","parentId":"p1","seq":2},"p3":{"id":"p3","name":"عوضه","gender":"m","parentId":"p2","seq":3},"p4":{"id":"p4","name":"مهدي","gender":"m","parentId":"p3","seq":4},"p5":{"id":"p5","name":"حسين (؟)","gender":"m","parentId":"p4","seq":5},"p6":{"id":"p6","name":"أسامة (؟)","gender":"m","parentId":"p4","seq":6},"p7":{"id":"p7","name":"معاذ (؟)","gender":"m","parentId":"p4","seq":7},"p8":{"id":"p8","name":"مجدي (؟)","gender":"m","parentId":"p3","seq":8},"p9":{"id":"p9","name":"وليد","gender":"m","parentId":"p8","seq":9},"p10":{"id":"p10","name":"تليد (؟)","gender":"m","parentId":"p8","seq":10},"p11":{"id":"p11","name":"أنس (؟)","gender":"m","parentId":"p8","seq":11},"p12":{"id":"p12","name":"محمد","gender":"m","parentId":"p2","seq":12},"p13":{"id":"p13","name":"نواف (؟)","gender":"m","parentId":"p12","seq":13},"p14":{"id":"p14","name":"عدي (؟)","gender":"m","parentId":"p13","seq":14},"p15":{"id":"p15","name":"فارس (؟)","gender":"m","parentId":"p13","seq":15},"p16":{"id":"p16","name":"الفرحان (؟)","gender":"m","parentId":"p13","seq":16},"p17":{"id":"p17","name":"البرجس (؟)","gender":"m","parentId":"p12","seq":17},"p18":{"id":"p18","name":"خالد (؟)","gender":"m","parentId":"p17","seq":18},"p19":{"id":"p19","name":"عبدالإله (؟)","gender":"m","parentId":"p17","seq":19},"p20":{"id":"p20","name":"عوده (؟)","gender":"m","parentId":"p2","seq":20},"p21":{"id":"p21","name":"شاكر (؟)","gender":"m","parentId":"p20","seq":21},"p22":{"id":"p22","name":"حاتم (؟)","gender":"m","parentId":"p21","seq":22},"p23":{"id":"p23","name":"هيثم (؟)","gender":"m","parentId":"p21","seq":23},"p24":{"id":"p24","name":"خالد","gender":"m","parentId":"p20","seq":24},"p25":{"id":"p25","name":"ناصر (؟)","gender":"m","parentId":"p24","seq":25},"p26":{"id":"p26","name":"نواف (؟)","gender":"m","parentId":"p24","seq":26},"p27":{"id":"p27","name":"أحمد","gender":"m","parentId":"p24","seq":27},"p28":{"id":"p28","name":"عبدالرحمن","gender":"m","parentId":"p1","seq":28},"p29":{"id":"p29","name":"أحمد","gender":"m","parentId":"p28","seq":29},"p30":{"id":"p30","name":"محمد (؟)","gender":"m","parentId":"p29","seq":30},"p31":{"id":"p31","name":"المهدي (؟)","gender":"m","parentId":"p29","seq":31},"p32":{"id":"p32","name":"عطيه (؟)","gender":"m","parentId":"p1","seq":32},"p33":{"id":"p33","name":"حامد (؟)","gender":"m","parentId":"p32","seq":33},"p34":{"id":"p34","name":"الجزاع (؟)","gender":"m","parentId":"p32","seq":34},"p35":{"id":"p35","name":"محمد","gender":"m","parentId":"root","seq":35},"p36":{"id":"p36","name":"عبدالله","gender":"m","parentId":"p35","seq":36},"p37":{"id":"p37","name":"عطيه","gender":"m","parentId":"p36","seq":37},"p38":{"id":"p38","name":"علي","gender":"m","parentId":"p37","seq":38},"p39":{"id":"p39","name":"محمد","gender":"m","parentId":"p38","seq":39},"p40":{"id":"p40","name":"فهد","gender":"m","parentId":"p39","seq":40},"p41":{"id":"p41","name":"خالد","gender":"m","parentId":"p39","seq":41},"p42":{"id":"p42","name":"أحمد","gender":"m","parentId":"p39","seq":42},"p43":{"id":"p43","name":"ماجد (؟)","gender":"m","parentId":"p39","seq":43},"p44":{"id":"p44","name":"سيف (؟)","gender":"m","parentId":"p39","seq":44},"p45":{"id":"p45","name":"عوض","gender":"m","parentId":"p37","seq":45},"p46":{"id":"p46","name":"زياد (؟)","gender":"m","parentId":"p45","seq":46},"p47":{"id":"p47","name":"بدر (؟)","gender":"m","parentId":"p45","seq":47},"p48":{"id":"p48","name":"فتحي (؟)","gender":"m","parentId":"p45","seq":48},"p49":{"id":"p49","name":"زغل (؟)","gender":"m","parentId":"p45","seq":49},"p50":{"id":"p50","name":"شفلوت","gender":"m","parentId":"p36","seq":50},"p51":{"id":"p51","name":"خضير","gender":"m","parentId":"p50","seq":51},"p52":{"id":"p52","name":"همام (؟)","gender":"m","parentId":"p51","seq":52},"p53":{"id":"p53","name":"حازم (؟)","gender":"m","parentId":"p51","seq":53},"p54":{"id":"p54","name":"ناصر","gender":"m","parentId":"p35","seq":54},"p55":{"id":"p55","name":"حسن","gender":"m","parentId":"p54","seq":55},"p56":{"id":"p56","name":"مهدي (؟)","gender":"m","parentId":"p55","seq":56},"p57":{"id":"p57","name":"جمعان","gender":"m","parentId":"p54","seq":57},"p58":{"id":"p58","name":"عطية","gender":"m","parentId":"p57","seq":58},"p59":{"id":"p59","name":"محمد (؟)","gender":"m","parentId":"p35","seq":59},"p60":{"id":"p60","name":"محمد (؟)","gender":"m","parentId":"p59","seq":60},"p61":{"id":"p61","name":"عتيق (؟)","gender":"m","parentId":"p35","seq":61},"p62":{"id":"p62","name":"ناهس (؟)","gender":"m","parentId":"p35","seq":62},"p63":{"id":"p63","name":"صالح (؟)","gender":"m","parentId":"p35","seq":63},"p64":{"id":"p64","name":"سعيد","gender":"m","parentId":"p35","seq":64},"p65":{"id":"p65","name":"ثقيب (؟)","gender":"m","parentId":"p35","seq":65},"p66":{"id":"p66","name":"حسن (؟)","gender":"m","parentId":"p35","seq":66},"p67":{"id":"p67","name":"موسى","gender":"m","parentId":"root","seq":67},"p68":{"id":"p68","name":"يحيى","gender":"m","parentId":"p67","seq":68},"p69":{"id":"p69","name":"محمد","gender":"m","parentId":"p68","seq":69},"p70":{"id":"p70","name":"عبدالله","gender":"m","parentId":"p69","seq":70},"p71":{"id":"p71","name":"نايف","gender":"m","parentId":"p70","seq":71},"p72":{"id":"p72","name":"فايز (؟)","gender":"m","parentId":"p70","seq":72},"p73":{"id":"p73","name":"خالد","gender":"m","parentId":"p70","seq":73},"p74":{"id":"p74","name":"موسى","gender":"m","parentId":"p69","seq":74},"p75":{"id":"p75","name":"هاني (؟)","gender":"m","parentId":"p74","seq":75},"p76":{"id":"p76","name":"معاذ","gender":"m","parentId":"p74","seq":76},"p77":{"id":"p77","name":"مازن","gender":"m","parentId":"p74","seq":77},"p78":{"id":"p78","name":"يوسف","gender":"m","parentId":"p69","seq":78},"p79":{"id":"p79","name":"أسامة","gender":"m","parentId":"p78","seq":79},"p80":{"id":"p80","name":"فيصل (؟)","gender":"m","parentId":"p78","seq":80},"p81":{"id":"p81","name":"عبدالرحمن","gender":"m","parentId":"p78","seq":81},"p82":{"id":"p82","name":"عبدالرحمن","gender":"m","parentId":"p67","seq":82},"p83":{"id":"p83","name":"سعيد","gender":"m","parentId":"p82","seq":83},"p84":{"id":"p84","name":"أحمد","gender":"m","parentId":"p83","seq":84},"p85":{"id":"p85","name":"هادي (؟)","gender":"m","parentId":"p84","seq":85},"p86":{"id":"p86","name":"شامي (؟)","gender":"m","parentId":"p84","seq":86},"p87":{"id":"p87","name":"إسماعيل (؟)","gender":"m","parentId":"p84","seq":87},"p88":{"id":"p88","name":"أحمد فارس (؟)","gender":"m","parentId":"p84","seq":88},"p89":{"id":"p89","name":"محمد","gender":"m","parentId":"p83","seq":89},"p90":{"id":"p90","name":"يوسف","gender":"m","parentId":"p89","seq":90},"p91":{"id":"p91","name":"خالد","gender":"m","parentId":"p89","seq":91},"p92":{"id":"p92","name":"أحمد","gender":"m","parentId":"p89","seq":92},"p93":{"id":"p93","name":"شعيب (؟)","gender":"m","parentId":"p89","seq":93},"p94":{"id":"p94","name":"عبدالعزيز (؟)","gender":"m","parentId":"p83","seq":94},"p95":{"id":"p95","name":"يوسف (؟)","gender":"m","parentId":"p83","seq":95},"p96":{"id":"p96","name":"أحمد يوسف (؟)","gender":"m","parentId":"p83","seq":96},"p97":{"id":"p97","name":"سعد (؟)","gender":"m","parentId":"p83","seq":97},"p98":{"id":"p98","name":"يزيد (؟)","gender":"m","parentId":"p83","seq":98},"p99":{"id":"p99","name":"حسين","gender":"m","parentId":"p67","seq":99},"p100":{"id":"p100","name":"البخيت","gender":"m","parentId":"p67","seq":100},"p101":{"id":"p101","name":"مساعد","gender":"m","parentId":"p67","seq":101}},"nextId":102};
 function defaultData() {
-  return {
-    persons: { root: { id: 'root', name: 'مهدي حسن دريبي حسن', gender: 'm', parentId: null, seq: 0 } },
-    nextId: 1
-  };
+  return JSON.parse(JSON.stringify(SEED));
 }
 function loadData() {
   try {
@@ -187,6 +194,7 @@ function saveData() {
 let data = loadData();
 let positions = {};
 let selectedId = null;
+let movingId = null;
 let modalMode = null;
 let view = { x: 0, y: 0, k: 0.4 };
 let userMoved = false;
@@ -391,6 +399,7 @@ function showPanel() {
   $('pInfo').textContent = 'الجيل ' + (ORDINALS[g] || g) + ' • ' + shapeTxt;
   $('pLineage').textContent = lineage(p.id);
   $('btnDelete').style.display = p.id === 'root' ? 'none' : '';
+  $('btnMove').style.display = p.id === 'root' ? 'none' : '';
   panel.classList.remove('hidden');
 }
 
@@ -492,6 +501,22 @@ svg.addEventListener('pointercancel', e => {
 });
 function handleClick(e) {
   const t = e.target.closest ? e.target.closest('.node') : null;
+  if (movingId) {
+    if (t) {
+      const target = t.getAttribute('data-id');
+      if (target === movingId || subtreeIds(movingId).includes(target)) {
+        alert('لا يمكن النقل إلى الشخص نفسه أو أحد ذريته');
+      } else {
+        data.persons[movingId].parentId = target;
+        selectedId = movingId;
+        saveData();
+      }
+    }
+    movingId = null;
+    $('moveBanner').classList.add('hidden');
+    render();
+    return;
+  }
   if (t) selectedId = t.getAttribute('data-id');
   else selectedId = null;
   render();
@@ -517,6 +542,11 @@ $('btnAdd').addEventListener('click', () => {
 });
 $('btnAddChild').addEventListener('click', () => openModal('add'));
 $('btnEdit').addEventListener('click', () => openModal('edit'));
+$('btnMove').addEventListener('click', () => {
+  if (!selectedId || selectedId === 'root') return;
+  movingId = selectedId;
+  $('moveBanner').classList.remove('hidden');
+});
 $('btnClose').addEventListener('click', () => { selectedId = null; render(); });
 $('btnDelete').addEventListener('click', () => {
   if (!selectedId || selectedId === 'root') return;
