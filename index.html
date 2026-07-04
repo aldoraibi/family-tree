@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>شجرة العائلة</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@400;700&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; font-family: 'Tajawal', sans-serif; background: #efe9db; }
+
+  #topbar {
+    position: fixed; top: 0; right: 0; left: 0; z-index: 20;
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    padding: 8px 14px; background: #fffdf7ee; border-bottom: 2px solid #d8cfb8;
+    backdrop-filter: blur(4px);
+  }
+  #topbar h1 { font-size: 17px; margin: 0 0 0 10px; color: #4a3418; font-family: 'Aref Ruqaa', serif; }
+  #topbar button, #panel button, .mbtns button {
+    font-family: inherit; font-size: 13px; padding: 6px 12px; border-radius: 8px;
+    border: 1px solid #c9b88f; background: #fdf7e8; color: #4a3418; cursor: pointer;
+  }
+  #topbar button:hover, #panel button:hover { background: #f3e7c8; }
+  button.primary { background: #7a5426 !important; color: #fff !important; border-color: #5e3f1a !important; }
+  #searchBox {
+    font-family: inherit; font-size: 13px; padding: 6px 10px; border-radius: 8px;
+    border: 1px solid #c9b88f; width: 160px; background: #fff;
+  }
+  #autosaveNote { font-size: 11px; color: #8a7b5c; margin-right: auto; }
+
+  #stage { position: absolute; inset: 0; top: 0; }
+  #svg { width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; }
+  #svg:active { cursor: grabbing; }
+
+  .node { cursor: pointer; }
+  .nname { font: 13px 'Tajawal', sans-serif; fill: #1f2937; paint-order: stroke; stroke: #ffffff; stroke-width: 3px; }
+  .rootname { font: 700 56px 'Aref Ruqaa', serif; fill: #241505; }
+  .hint { font: 26px 'Tajawal', sans-serif; fill: #9a8f78; }
+
+  #panel {
+    position: fixed; top: 70px; left: 14px; z-index: 20; width: 250px;
+    background: #fffdf7; border: 2px solid #d8cfb8; border-radius: 14px;
+    padding: 14px; box-shadow: 0 4px 18px #0002;
+  }
+  #panel h2 { margin: 0 0 4px; font-size: 18px; color: #4a3418; font-family: 'Aref Ruqaa', serif; }
+  #pInfo { font-size: 12px; color: #7a6a48; margin: 0 0 8px; }
+  #pLineage { font-size: 13px; color: #333; background: #f7f0dd; border-radius: 8px; padding: 8px; margin: 0 0 10px; line-height: 1.7; }
+  #panel .pbtns { display: flex; flex-wrap: wrap; gap: 6px; }
+  #btnDelete { color: #a02020 !important; }
+
+  #legend {
+    position: fixed; bottom: 12px; left: 14px; z-index: 15;
+    background: #fffdf7e6; border: 2px solid #d8cfb8; border-radius: 12px;
+    padding: 10px 12px; font-size: 12px; color: #4a3418; line-height: 1.5;
+    max-width: 210px;
+  }
+  #legend h3 { margin: 0 0 6px; font-size: 13px; font-family: 'Aref Ruqaa', serif; }
+  #legend .lrow { display: flex; align-items: center; gap: 8px; }
+  #legend svg { flex: 0 0 auto; }
+
+  #modal {
+    position: fixed; inset: 0; z-index: 30; background: #0006;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .mbox {
+    background: #fffdf7; border-radius: 14px; padding: 20px; width: 300px;
+    border: 2px solid #d8cfb8;
+  }
+  .mbox h3 { margin: 0 0 12px; color: #4a3418; }
+  .mbox label { display: block; font-size: 13px; margin-bottom: 10px; color: #4a3418; }
+  .mbox input[type=text] {
+    width: 100%; font-family: inherit; font-size: 15px; padding: 8px;
+    border: 1px solid #c9b88f; border-radius: 8px; margin-top: 4px; background: #fff;
+  }
+  .mrow { display: flex; gap: 16px; margin-bottom: 14px; }
+  .mrow label { display: flex; align-items: center; gap: 5px; margin: 0; }
+  .mbtns { display: flex; gap: 8px; justify-content: flex-start; }
+  .hidden { display: none !important; }
+
+  @media (max-width: 600px) {
+    #panel { width: calc(100% - 28px); top: auto; bottom: 12px; }
+    #legend { display: none; }
+    #searchBox { width: 110px; }
+  }
+</style>
+</head>
+<body>
+
+<header id="topbar">
+  <h1>شجرة العائلة</h1>
+  <button id="btnAdd" class="primary">إضافة ابن / ابنة</button>
+  <input id="searchBox" type="search" placeholder="ابحث عن اسم...">
+  <button id="btnFit">ملاءمة العرض</button>
+  <button id="btnPNG">تصدير صورة</button>
+  <button id="btnExport">حفظ نسخة</button>
+  <button id="btnImport">استيراد نسخة</button>
+  <button id="btnReset">مسح الكل</button>
+  <span id="autosaveNote">يُحفظ تلقائياً في هذا المتصفح</span>
+</header>
+
+<div id="stage">
+  <svg id="svg" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="barkGrad" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#a9743c"/>
+        <stop offset="0.5" stop-color="#8a5a2b"/>
+        <stop offset="1" stop-color="#6e441d"/>
+      </linearGradient>
+    </defs>
+    <g id="vp"></g>
+  </svg>
+</div>
+
+<aside id="panel" class="hidden">
+  <h2 id="pName"></h2>
+  <p id="pInfo"></p>
+  <p id="pLineage"></p>
+  <div class="pbtns">
+    <button id="btnAddChild" class="primary">إضافة ابن / ابنة</button>
+    <button id="btnEdit">تعديل</button>
+    <button id="btnDelete">حذف</button>
+    <button id="btnClose">إغلاق</button>
+  </div>
+</aside>
+
+<div id="legend">
+  <h3>مفتاح الشجرة</h3>
+  <div class="lrow"><svg width="26" height="20" viewBox="-22 -14 44 28"><path d="M-15,7 C-23,7 -24,-3 -17,-5 C-19,-13 -8,-16 -4,-11 C-1,-18 9,-18 11,-9 C19,-11 23,-3 16,1 C16,6 12,7 8,7 Z" fill="#cfe6f5" stroke="#6f9ec0"/></svg> الجيل الثاني: سحابة</div>
+  <div class="lrow"><svg width="26" height="20" viewBox="-13 -13 26 26"><circle r="10" fill="#ccd7e4" stroke="#7d8ea3"/></svg> الجيل الثالث: دائرة</div>
+  <div class="lrow"><svg width="26" height="20" viewBox="-14 -14 28 28"><polygon points="0,-11 9,-5 9,5 0,11 -9,5 -9,-5" fill="#f5b043" stroke="#b97a17"/></svg> الجيل الرابع: سداسي</div>
+  <div class="lrow"><svg width="26" height="20" viewBox="-14 -14 28 28"><rect x="-8" y="-8" width="16" height="16" rx="2" transform="rotate(8)" fill="#f6e04b" stroke="#b3a013"/></svg> الجيل الخامس: مربع</div>
+  <div class="lrow"><svg width="26" height="20" viewBox="-13 -13 26 26"><polygon points="0,-10 10,8 -10,8" fill="#e2574c" stroke="#9e2f26" stroke-linejoin="round"/></svg> الجيل السادس: مثلث</div>
+  <div class="lrow"><svg width="26" height="20" viewBox="-14 -14 28 28"><g><circle cx="0" cy="-7" r="5" fill="#f2a9c4"/><circle cx="6.7" cy="-2.2" r="5" fill="#f2a9c4"/><circle cx="4.1" cy="5.7" r="5" fill="#f2a9c4"/><circle cx="-4.1" cy="5.7" r="5" fill="#f2a9c4"/><circle cx="-6.7" cy="-2.2" r="5" fill="#f2a9c4"/><circle r="3.5" fill="#f6cf5c"/></g></svg> الجيل السابع: زهرة</div>
+  <div class="lrow"><svg width="26" height="20" viewBox="-14 -14 28 28"><g transform="rotate(25)"><path d="M0,-11 C7,-6 7,5 0,11 C-7,5 -7,-6 0,-11 Z" fill="#7fb069" stroke="#4e7a3a"/></g></svg> الأوراق تمثل البنات</div>
+</div>
+
+<div id="modal" class="hidden">
+  <div class="mbox">
+    <h3 id="mTitle"></h3>
+    <label>الاسم<input id="mName" type="text" autocomplete="off"></label>
+    <div class="mrow" id="mGenderRow">
+      <label><input type="radio" name="mGender" value="m" checked> ذكر</label>
+      <label><input type="radio" name="mGender" value="f"> أنثى</label>
+    </div>
+    <div class="mbtns">
+      <button id="mSave" class="primary">حفظ</button>
+      <button id="mCancel">إلغاء</button>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="importFile" accept=".json,application/json" hidden>
+
+<script>
+'use strict';
+
+/* ---------- الثوابت ---------- */
+const LS_KEY = 'shajara-v1';
+const W = 1600, H = 2200, CX = 800;
+const TRUNK_TOP = { x: CX, y: 1330 };
+const STEPS = { 2: 245, 3: 215, 4: 195, 5: 175, 6: 155, 7: 135, 8: 120 };
+const SHAPE_NAMES = { 2: 'سحابة', 3: 'دائرة', 4: 'سداسي', 5: 'مربع', 6: 'مثلث', 7: 'زهرة وردية' };
+const ORDINALS = ['', 'الأول', 'الثاني', 'الثالث', 'الرابع', 'الخامس', 'السادس', 'السابع', 'الثامن', 'التاسع', 'العاشر', 'الحادي عشر', 'الثاني عشر'];
+
+/* ---------- البيانات ---------- */
+function defaultData() {
+  return {
+    persons: { root: { id: 'root', name: 'مهدي حسن دريبي حسن', gender: 'm', parentId: null, seq: 0 } },
+    nextId: 1
+  };
+}
+function loadData() {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (raw) {
+      const d = JSON.parse(raw);
+      if (d && d.persons && d.persons.root) return d;
+    }
+  } catch (e) {}
+  return defaultData();
+}
+function saveData() {
+  try { localStorage.setItem(LS_KEY, JSON.stringify(data)); } catch (e) {}
+}
+
+let data = loadData();
+let positions = {};
+let selectedId = null;
+let modalMode = null;
+let view = { x: 0, y: 0, k: 0.4 };
+let userMoved = false;
+
+/* ---------- أدوات ---------- */
+const $ = id => document.getElementById(id);
+const rad = d => d * Math.PI / 180;
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+function esc(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+function childrenOf(id) {
+  return Object.values(data.persons)
+    .filter(p => p.parentId === id)
+    .sort((a, b) => (a.seq || 0) - (b.seq || 0));
+}
+function genOf(id) {
+  let g = 1, p = data.persons[id];
+  while (p && p.parentId) { g++; p = data.persons[p.parentId]; }
+  return g;
+}
+function leafCount(id) {
+  const c = childrenOf(id);
+  if (!c.length) return 1;
+  return c.reduce((s, k) => s + leafCount(k.id), 0);
+}
+function subtreeIds(id) {
+  let out = [id];
+  for (const k of childrenOf(id)) out = out.concat(subtreeIds(k.id));
+  return out;
+}
+function lineage(id) {
+  const p = data.persons[id];
+  let s = p.name, cur = p, first = true;
+  while (cur.parentId) {
+    const par = data.persons[cur.parentId];
+    if (!par) break;
+    s += (first && p.gender === 'f') ? ' بنت ' : ' بن ';
+    s += par.name;
+    first = false;
+    cur = par;
+  }
+  return s;
+}
+
+/* ---------- التخطيط ---------- */
+function layout() {
+  positions = { root: { x: TRUNK_TOP.x, y: TRUNK_TOP.y } };
+  assignAngles('root', 35, 145);
+}
+function assignAngles(id, a0, a1) {
+  const kids = childrenOf(id);
+  if (!kids.length) return;
+  const total = kids.reduce((s, k) => s + leafCount(k.id), 0);
+  let a = a0;
+  for (const k of kids) {
+    const span = (a1 - a0) * leafCount(k.id) / total;
+    const mid = a + span / 2;
+    const g = genOf(k.id);
+    const r = STEPS[g] || 112;
+    const pp = positions[id];
+    positions[k.id] = {
+      x: pp.x + r * Math.cos(rad(mid)),
+      y: pp.y - r * Math.sin(rad(mid))
+    };
+    assignAngles(k.id, a, a + span);
+    a += span;
+  }
+}
+
+/* ---------- الرسم ---------- */
+function branchPath(pp, cp, w) {
+  const mx = (pp.x + cp.x) / 2, my = (pp.y + cp.y) / 2;
+  const dx = cp.x - pp.x, dy = cp.y - pp.y;
+  const n = Math.hypot(dx, dy) || 1;
+  const sgn = cp.x < pp.x ? 1 : -1;
+  const off = Math.min(30, n * 0.18) * sgn;
+  const qx = mx - dy / n * off, qy = my + dx / n * off;
+  return '<path d="M' + pp.x.toFixed(1) + ',' + pp.y.toFixed(1) +
+    ' Q' + qx.toFixed(1) + ',' + qy.toFixed(1) +
+    ' ' + cp.x.toFixed(1) + ',' + cp.y.toFixed(1) +
+    '" fill="none" stroke="#8a5a2b" stroke-width="' + w.toFixed(1) + '" stroke-linecap="round"/>';
+}
+function branchesSVG(id) {
+  let s = '';
+  const pp = positions[id];
+  for (const k of childrenOf(id)) {
+    const cp = positions[k.id];
+    const w = Math.min(16, 2.5 + 3 * Math.sqrt(leafCount(k.id)));
+    s += branchPath(pp, cp, w) + branchesSVG(k.id);
+  }
+  return s;
+}
+function shapeSVG(p) {
+  const g = genOf(p.id);
+  const sel = p.id === selectedId;
+  const pos = positions[p.id];
+  if (!pos) return '';
+  let shape = '';
+  if (p.gender === 'f') {
+    shape = '<g transform="rotate(25)"><path d="M0,-19 C13,-11 13,9 0,19 C-13,9 -13,-11 0,-19 Z" fill="#7fb069" stroke="#4e7a3a" stroke-width="1.5"/><line x1="0" y1="-14" x2="0" y2="14" stroke="#4e7a3a" stroke-width="1"/></g>';
+  } else if (g === 2) {
+    shape = '<path d="M-22,10 C-34,10 -36,-4 -26,-8 C-28,-20 -12,-24 -6,-16 C-2,-26 14,-26 16,-14 C28,-16 34,-4 24,2 C24,8 18,10 12,10 Z" fill="#cfe6f5" stroke="#6f9ec0" stroke-width="1.5"/>';
+  } else if (g === 3) {
+    shape = '<circle r="17" fill="#ccd7e4" stroke="#7d8ea3" stroke-width="1.5"/>';
+  } else if (g === 4) {
+    shape = '<polygon points="0,-19 16,-9 16,9 0,19 -16,9 -16,-9" fill="#f5b043" stroke="#b97a17" stroke-width="1.5"/>';
+  } else if (g === 5) {
+    shape = '<rect x="-14" y="-14" width="28" height="28" rx="3" transform="rotate(8)" fill="#f6e04b" stroke="#b3a013" stroke-width="1.5"/>';
+  } else if (g === 6) {
+    shape = '<polygon points="0,-18 18,13 -18,13" fill="#e2574c" stroke="#9e2f26" stroke-width="1.5" stroke-linejoin="round"/>';
+  } else {
+    const fill = g === 7 ? '#f2a9c4' : '#a9c8f2';
+    const st = g === 7 ? '#c76d92' : '#5f83b8';
+    let petals = '';
+    for (let i = 0; i < 5; i++) {
+      const an = rad(90 + i * 72);
+      petals += '<circle cx="' + (10 * Math.cos(an)).toFixed(1) + '" cy="' + (10 * Math.sin(an)).toFixed(1) + '" r="8.5" fill="' + fill + '" stroke="' + st + '" stroke-width="1"/>';
+    }
+    shape = petals + '<circle r="5.5" fill="#f6cf5c" stroke="#c79a25" stroke-width="1"/>';
+  }
+  const ring = sel ? '<circle r="30" fill="none" stroke="#d97706" stroke-width="2.5" stroke-dasharray="5 4"/>' : '';
+  return '<g class="node" data-id="' + p.id + '" transform="translate(' + pos.x.toFixed(1) + ',' + pos.y.toFixed(1) + ')">' +
+    ring + shape +
+    '<text y="34" text-anchor="middle" class="nname">' + esc(p.name) + '</text></g>';
+}
+function trunkSVG() {
+  const sel = selectedId === 'root';
+  const words = data.persons.root.name.split(/\s+/).filter(Boolean);
+  let names = '', y = 1440;
+  for (const wd of words) {
+    names += '<text x="' + CX + '" y="' + y + '" text-anchor="middle" class="rootname">' + esc(wd) + '</text>';
+    y += 92;
+  }
+  const ring = sel
+    ? '<rect x="' + (CX - 110) + '" y="1355" width="220" height="' + Math.max(130, words.length * 92 + 36) + '" fill="none" stroke="#d97706" stroke-width="3" stroke-dasharray="8 6" rx="14"/>'
+    : '';
+  return '<g class="node" data-id="root">' +
+    '<path d="M690,2010 C720,1955 746,1800 756,1600 C761,1470 763,1380 763,1330 L837,1330 C837,1380 839,1470 844,1600 C854,1800 880,1955 910,2010 C860,2000 830,2004 800,2004 C770,2004 740,2000 690,2010 Z" fill="url(#barkGrad)" stroke="#5e3a17" stroke-width="3"/>' +
+    '<path d="M780,1950 C782,1800 786,1600 788,1400 M818,1960 C814,1820 810,1620 808,1420" fill="none" stroke="#734a1e" stroke-width="2" opacity="0.5"/>' +
+    names + ring + '</g>';
+}
+function buildScene() {
+  layout();
+  let out = '';
+  out += '<rect x="20" y="20" width="' + (W - 40) + '" height="' + (H - 40) + '" fill="#f7f2e7" stroke="#5a6b7a" stroke-width="3"/>';
+  out += '<rect x="34" y="34" width="' + (W - 68) + '" height="' + (H - 68) + '" fill="none" stroke="#8a9aa8" stroke-width="1"/>';
+  out += '<ellipse cx="' + CX + '" cy="2015" rx="250" ry="20" fill="#e4dcc8"/>';
+  out += branchesSVG('root');
+  out += trunkSVG();
+  for (const p of Object.values(data.persons)) {
+    if (p.id !== 'root') out += shapeSVG(p);
+  }
+  if (childrenOf('root').length === 0) {
+    out += '<text x="' + CX + '" y="1180" text-anchor="middle" class="hint">انقر على الجذع ثم «إضافة ابن / ابنة» لبدء بناء الشجرة</text>';
+  }
+  return out;
+}
+
+/* ---------- العرض ---------- */
+const svg = $('svg'), vp = $('vp'), stage = $('stage');
+
+function applyTransform() {
+  vp.setAttribute('transform', 'translate(' + view.x + ',' + view.y + ') scale(' + view.k + ')');
+}
+function fitView() {
+  const r = stage.getBoundingClientRect();
+  view.k = Math.min(r.width / W, r.height / H) * 0.96;
+  view.x = (r.width - W * view.k) / 2;
+  view.y = (r.height - H * view.k) / 2 + 20;
+  applyTransform();
+}
+function centerOn(id) {
+  const pos = id === 'root' ? { x: CX, y: 1550 } : positions[id];
+  if (!pos) return;
+  const r = stage.getBoundingClientRect();
+  view.k = Math.max(view.k, 0.7);
+  view.x = r.width / 2 - pos.x * view.k;
+  view.y = r.height / 2 - pos.y * view.k;
+  applyTransform();
+  userMoved = true;
+}
+function render() {
+  vp.innerHTML = buildScene();
+  showPanel();
+}
+
+/* ---------- لوحة التفاصيل ---------- */
+function showPanel() {
+  const panel = $('panel');
+  if (!selectedId || !data.persons[selectedId]) {
+    panel.classList.add('hidden');
+    return;
+  }
+  const p = data.persons[selectedId];
+  const g = genOf(p.id);
+  $('pName').textContent = p.name;
+  let shapeTxt;
+  if (p.id === 'root') shapeTxt = 'الجذع (الجد الأعلى)';
+  else if (p.gender === 'f') shapeTxt = 'أنثى — ورقة خضراء';
+  else shapeTxt = SHAPE_NAMES[g] || 'زهرة زرقاء (جيل متقدم)';
+  $('pInfo').textContent = 'الجيل ' + (ORDINALS[g] || g) + ' • ' + shapeTxt;
+  $('pLineage').textContent = lineage(p.id);
+  $('btnDelete').style.display = p.id === 'root' ? 'none' : '';
+  panel.classList.remove('hidden');
+}
+
+/* ---------- النافذة المنبثقة ---------- */
+function openModal(mode) {
+  modalMode = mode;
+  const p = data.persons[selectedId];
+  if (mode === 'edit') {
+    $('mTitle').textContent = 'تعديل: ' + p.name;
+    $('mName').value = p.name;
+    document.querySelector('input[name=mGender][value=' + p.gender + ']').checked = true;
+    $('mGenderRow').style.display = p.id === 'root' ? 'none' : '';
+  } else {
+    $('mTitle').textContent = 'إضافة ابن / ابنة لـ ' + p.name;
+    $('mName').value = '';
+    document.querySelector('input[name=mGender][value=m]').checked = true;
+    $('mGenderRow').style.display = '';
+  }
+  $('modal').classList.remove('hidden');
+  setTimeout(() => $('mName').focus(), 50);
+}
+function closeModal() {
+  $('modal').classList.add('hidden');
+  modalMode = null;
+}
+function saveModal() {
+  const name = $('mName').value.trim();
+  if (!name) { $('mName').focus(); return; }
+  const gender = document.querySelector('input[name=mGender]:checked').value;
+  if (modalMode === 'add') {
+    const id = 'p' + data.nextId;
+    data.persons[id] = { id: id, name: name, gender: gender, parentId: selectedId, seq: data.nextId };
+    data.nextId++;
+    selectedId = id;
+  } else if (modalMode === 'edit') {
+    const p = data.persons[selectedId];
+    p.name = name;
+    if (p.id !== 'root') p.gender = gender;
+  }
+  saveData();
+  closeModal();
+  render();
+}
+
+/* ---------- الأحداث ---------- */
+let pointers = new Map();
+let dragStart = null, pinchStart = null, movedFlag = false;
+
+svg.addEventListener('pointerdown', e => {
+  svg.setPointerCapture(e.pointerId);
+  pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (pointers.size === 1) {
+    dragStart = { x: e.clientX, y: e.clientY, vx: view.x, vy: view.y };
+    movedFlag = false;
+  } else if (pointers.size === 2) {
+    const pts = [...pointers.values()];
+    pinchStart = {
+      d: Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y),
+      k: view.k, vx: view.x, vy: view.y,
+      cx: (pts[0].x + pts[1].x) / 2, cy: (pts[0].y + pts[1].y) / 2
+    };
+    dragStart = null;
+  }
+});
+svg.addEventListener('pointermove', e => {
+  if (!pointers.has(e.pointerId)) return;
+  pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (pinchStart && pointers.size === 2) {
+    const pts = [...pointers.values()];
+    const d = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y) || 1;
+    const nk = clamp(pinchStart.k * d / pinchStart.d, 0.08, 3);
+    const f = nk / pinchStart.k;
+    view.x = pinchStart.cx - (pinchStart.cx - pinchStart.vx) * f;
+    view.y = pinchStart.cy - (pinchStart.cy - pinchStart.vy) * f;
+    view.k = nk;
+    userMoved = true;
+    applyTransform();
+  } else if (dragStart) {
+    const dx = e.clientX - dragStart.x, dy = e.clientY - dragStart.y;
+    if (Math.abs(dx) + Math.abs(dy) > 5) movedFlag = true;
+    view.x = dragStart.vx + dx;
+    view.y = dragStart.vy + dy;
+    if (movedFlag) userMoved = true;
+    applyTransform();
+  }
+});
+svg.addEventListener('pointerup', e => {
+  pointers.delete(e.pointerId);
+  if (pointers.size < 2) pinchStart = null;
+  if (pointers.size === 0) {
+    if (!movedFlag) handleClick(e);
+    dragStart = null;
+  }
+});
+svg.addEventListener('pointercancel', e => {
+  pointers.delete(e.pointerId);
+  pinchStart = null;
+  dragStart = null;
+});
+function handleClick(e) {
+  const t = e.target.closest ? e.target.closest('.node') : null;
+  if (t) selectedId = t.getAttribute('data-id');
+  else selectedId = null;
+  render();
+}
+svg.addEventListener('wheel', e => {
+  e.preventDefault();
+  const factor = e.deltaY < 0 ? 1.12 : 1 / 1.12;
+  const nk = clamp(view.k * factor, 0.08, 3);
+  const f = nk / view.k;
+  const rect = svg.getBoundingClientRect();
+  const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+  view.x = mx - (mx - view.x) * f;
+  view.y = my - (my - view.y) * f;
+  view.k = nk;
+  userMoved = true;
+  applyTransform();
+}, { passive: false });
+
+/* أزرار */
+$('btnAdd').addEventListener('click', () => {
+  if (!selectedId) { alert('اختر شخصاً من الشجرة أولاً (أو انقر على الجذع)'); return; }
+  openModal('add');
+});
+$('btnAddChild').addEventListener('click', () => openModal('add'));
+$('btnEdit').addEventListener('click', () => openModal('edit'));
+$('btnClose').addEventListener('click', () => { selectedId = null; render(); });
+$('btnDelete').addEventListener('click', () => {
+  if (!selectedId || selectedId === 'root') return;
+  const ids = subtreeIds(selectedId);
+  const msg = ids.length === 1
+    ? 'هل تريد حذف «' + data.persons[selectedId].name + '»؟'
+    : 'سيُحذف «' + data.persons[selectedId].name + '» ومعه ' + (ids.length - 1) + ' من ذريته. متابعة؟';
+  if (!confirm(msg)) return;
+  for (const id of ids) delete data.persons[id];
+  selectedId = null;
+  saveData();
+  render();
+});
+$('mSave').addEventListener('click', saveModal);
+$('mCancel').addEventListener('click', closeModal);
+$('mName').addEventListener('keydown', e => { if (e.key === 'Enter') saveModal(); });
+$('modal').addEventListener('click', e => { if (e.target === $('modal')) closeModal(); });
+$('btnFit').addEventListener('click', () => { fitView(); userMoved = false; });
+$('btnReset').addEventListener('click', () => {
+  if (!confirm('سيُمسح كل شيء وتعود الشجرة إلى الجذع فقط. متأكد؟')) return;
+  data = defaultData();
+  selectedId = null;
+  saveData();
+  render();
+  fitView();
+});
+
+/* بحث */
+$('searchBox').addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return;
+  const q = e.target.value.trim();
+  if (!q) return;
+  const hit = Object.values(data.persons).find(p => p.name.includes(q));
+  if (hit) {
+    selectedId = hit.id;
+    render();
+    centerOn(hit.id);
+  } else {
+    alert('لا يوجد اسم يطابق «' + q + '»');
+  }
+});
+
+/* تصدير واستيراد */
+$('btnExport').addEventListener('click', () => {
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'شجرة-العائلة.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
+$('btnImport').addEventListener('click', () => $('importFile').click());
+$('importFile').addEventListener('change', e => {
+  const f = e.target.files[0];
+  if (!f) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const d = JSON.parse(reader.result);
+      if (!d || !d.persons || !d.persons.root) throw new Error('bad');
+      if (!d.nextId) d.nextId = Object.keys(d.persons).length + 1;
+      data = d;
+      selectedId = null;
+      saveData();
+      render();
+      fitView();
+    } catch (err) {
+      alert('الملف غير صالح — يجب أن يكون نسخة محفوظة من هذا الموقع');
+    }
+  };
+  reader.readAsText(f);
+  e.target.value = '';
+});
+
+/* تصدير صورة */
+const BARK_DEFS = '<defs><linearGradient id="barkGrad" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#a9743c"/><stop offset="0.5" stop-color="#8a5a2b"/><stop offset="1" stop-color="#6e441d"/></linearGradient></defs>';
+$('btnPNG').addEventListener('click', () => {
+  const keep = selectedId;
+  selectedId = null;
+  const inner = buildScene();
+  selectedId = keep;
+  const style = '<style>.nname{font:13px Tajawal,sans-serif;fill:#1f2937;paint-order:stroke;stroke:#fff;stroke-width:3px}.rootname{font:700 56px "Aref Ruqaa",serif;fill:#241505}.hint{font:26px Tajawal,sans-serif;fill:#9a8f78}</style>';
+  const svgStr = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + W + ' ' + H + '" width="' + W + '" height="' + H + '">' +
+    BARK_DEFS + style +
+    '<rect width="' + W + '" height="' + H + '" fill="#efe9db"/>' + inner + '</svg>';
+  const blob = new Blob([svgStr], { type: 'image/svg+xml;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const img = new Image();
+  img.onload = () => {
+    const c = document.createElement('canvas');
+    c.width = W * 2;
+    c.height = H * 2;
+    const ctx = c.getContext('2d');
+    ctx.fillStyle = '#efe9db';
+    ctx.fillRect(0, 0, c.width, c.height);
+    ctx.drawImage(img, 0, 0, c.width, c.height);
+    URL.revokeObjectURL(url);
+    const a = document.createElement('a');
+    a.download = 'شجرة-العائلة.png';
+    a.href = c.toDataURL('image/png');
+    a.click();
+  };
+  img.onerror = () => { URL.revokeObjectURL(url); alert('تعذر تصدير الصورة'); };
+  img.src = url;
+});
+
+/* ---------- البداية ---------- */
+window.addEventListener('resize', () => { if (!userMoved) fitView(); });
+render();
+fitView();
+</script>
+</body>
+</html>
