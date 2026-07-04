@@ -13,30 +13,34 @@
   #topbar {
     position: fixed; top: 0; right: 0; left: 0; z-index: 20;
     display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
-    padding: 8px 14px; background: #fffdf7ee; border-bottom: 2px solid #d8cfb8;
-    backdrop-filter: blur(4px);
+    padding: 10px 18px;
+    background: linear-gradient(180deg, #4e3316, #3a2710);
+    border-bottom: 3px solid #c9a25e;
+    box-shadow: 0 2px 14px #0005;
   }
-  #topbar h1 { font-size: 17px; margin: 0 0 0 10px; color: #4a3418; font-family: 'Aref Ruqaa', serif; }
+  #topbar h1 { font-size: 21px; margin: 0 0 0 14px; color: #e9c98a; font-family: 'Aref Ruqaa', serif; text-shadow: 0 1px 3px #0007; }
   #topbar button, #panel button, .mbtns button {
-    font-family: inherit; font-size: 13px; padding: 6px 12px; border-radius: 8px;
-    border: 1px solid #c9b88f; background: #fdf7e8; color: #4a3418; cursor: pointer;
+    font-family: inherit; font-size: 13px; padding: 7px 15px; border-radius: 20px;
+    border: 1px solid #b3925c; background: #fdf6e6; color: #4a3418; cursor: pointer;
+    transition: background .15s, transform .1s;
   }
-  #topbar button:hover, #panel button:hover { background: #f3e7c8; }
-  button.primary { background: #7a5426 !important; color: #fff !important; border-color: #5e3f1a !important; }
+  #topbar button:hover, #panel button:hover { background: #f1e2bf; transform: translateY(-1px); }
+  button.primary { background: linear-gradient(180deg, #b88746, #96682e) !important; color: #fff !important; border-color: #7a5426 !important; font-weight: 700; }
   #searchBox {
-    font-family: inherit; font-size: 13px; padding: 6px 10px; border-radius: 8px;
-    border: 1px solid #c9b88f; width: 160px; background: #fff;
+    font-family: inherit; font-size: 13px; padding: 7px 14px; border-radius: 20px;
+    border: 1px solid #b3925c; width: 170px; background: #fdf6e6;
   }
-  #autosaveNote { font-size: 11px; color: #8a7b5c; margin-right: auto; }
+  #autosaveNote { font-size: 11px; color: #cbb185; margin-right: auto; }
 
   #stage { position: absolute; inset: 0; top: 0; }
   #svg { width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; }
   #svg:active { cursor: grabbing; }
 
   .node { cursor: pointer; }
-  .nname { font: 13px 'Tajawal', sans-serif; fill: #1f2937; paint-order: stroke; stroke: #ffffff; stroke-width: 3px; }
-  .rootname { font: 700 56px 'Aref Ruqaa', serif; fill: #241505; }
-  .hint { font: 26px 'Tajawal', sans-serif; fill: #9a8f78; }
+  .nname { font: 500 15px 'Tajawal', sans-serif; fill: #3b2a12; paint-order: stroke; stroke: #fdf8ec; stroke-width: 4px; stroke-linejoin: round; }
+  .rootname { font: 700 58px 'Aref Ruqaa', serif; fill: #2b1a07; }
+  .cartouche-t { font: 700 46px 'Aref Ruqaa', serif; fill: #f3dfae; }
+  .hint { font: 24px 'Tajawal', sans-serif; fill: #a3947a; }
 
   #panel {
     position: fixed; top: 70px; left: 14px; z-index: 20; width: 250px;
@@ -106,16 +110,7 @@
 </header>
 
 <div id="stage">
-  <svg id="svg" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <linearGradient id="barkGrad" x1="0" y1="0" x2="1" y2="0">
-        <stop offset="0" stop-color="#a9743c"/>
-        <stop offset="0.5" stop-color="#8a5a2b"/>
-        <stop offset="1" stop-color="#6e441d"/>
-      </linearGradient>
-    </defs>
-    <g id="vp"></g>
-  </svg>
+  <svg id="svg" xmlns="http://www.w3.org/2000/svg"><g id="vp"></g></svg>
 </div>
 
 <aside id="panel" class="hidden">
@@ -133,13 +128,13 @@
 
 <div id="legend">
   <h3>مفتاح الشجرة</h3>
-  <div class="lrow"><svg width="26" height="20" viewBox="-22 -14 44 28"><path d="M-15,7 C-23,7 -24,-3 -17,-5 C-19,-13 -8,-16 -4,-11 C-1,-18 9,-18 11,-9 C19,-11 23,-3 16,1 C16,6 12,7 8,7 Z" fill="#cfe6f5" stroke="#6f9ec0"/></svg> الجيل الثاني: سحابة</div>
-  <div class="lrow"><svg width="26" height="20" viewBox="-13 -13 26 26"><circle r="10" fill="#ccd7e4" stroke="#7d8ea3"/></svg> الجيل الثالث: دائرة</div>
-  <div class="lrow"><svg width="26" height="20" viewBox="-14 -14 28 28"><polygon points="0,-11 9,-5 9,5 0,11 -9,5 -9,-5" fill="#f5b043" stroke="#b97a17"/></svg> الجيل الرابع: سداسي</div>
-  <div class="lrow"><svg width="26" height="20" viewBox="-14 -14 28 28"><rect x="-8" y="-8" width="16" height="16" rx="2" transform="rotate(8)" fill="#f6e04b" stroke="#b3a013"/></svg> الجيل الخامس: مربع</div>
-  <div class="lrow"><svg width="26" height="20" viewBox="-13 -13 26 26"><polygon points="0,-10 10,8 -10,8" fill="#e2574c" stroke="#9e2f26" stroke-linejoin="round"/></svg> الجيل السادس: مثلث</div>
-  <div class="lrow"><svg width="26" height="20" viewBox="-14 -14 28 28"><g><circle cx="0" cy="-7" r="5" fill="#f2a9c4"/><circle cx="6.7" cy="-2.2" r="5" fill="#f2a9c4"/><circle cx="4.1" cy="5.7" r="5" fill="#f2a9c4"/><circle cx="-4.1" cy="5.7" r="5" fill="#f2a9c4"/><circle cx="-6.7" cy="-2.2" r="5" fill="#f2a9c4"/><circle r="3.5" fill="#f6cf5c"/></g></svg> الجيل السابع: زهرة</div>
-  <div class="lrow"><svg width="26" height="20" viewBox="-14 -14 28 28"><g transform="rotate(25)"><path d="M0,-11 C7,-6 7,5 0,11 C-7,5 -7,-6 0,-11 Z" fill="#7fb069" stroke="#4e7a3a"/></g></svg> الأوراق تمثل البنات</div>
+  <div class="lrow"><svg width="26" height="20" viewBox="-22 -14 44 28"><path d="M-15,7 C-23,7 -24,-3 -17,-5 C-19,-13 -8,-16 -4,-11 C-1,-18 9,-18 11,-9 C19,-11 23,-3 16,1 C16,6 12,7 8,7 Z" fill="#d9ecf9" stroke="#5b93bd"/></svg> الجيل الثاني: سحابة</div>
+  <div class="lrow"><svg width="26" height="20" viewBox="-13 -13 26 26"><circle r="10" fill="#d9e2ee" stroke="#7388a1"/></svg> الجيل الثالث: دائرة</div>
+  <div class="lrow"><svg width="26" height="20" viewBox="-14 -14 28 28"><polygon points="0,-11 9,-5 9,5 0,11 -9,5 -9,-5" fill="#f2a13c" stroke="#a86a12"/></svg> الجيل الرابع: سداسي</div>
+  <div class="lrow"><svg width="26" height="20" viewBox="-14 -14 28 28"><rect x="-8" y="-8" width="16" height="16" rx="2" transform="rotate(8)" fill="#f4d93f" stroke="#a08c10"/></svg> الجيل الخامس: مربع</div>
+  <div class="lrow"><svg width="26" height="20" viewBox="-13 -13 26 26"><polygon points="0,-10 10,8 -10,8" fill="#d9534a" stroke="#8e2b23" stroke-linejoin="round"/></svg> الجيل السادس: مثلث</div>
+  <div class="lrow"><svg width="26" height="20" viewBox="-14 -14 28 28"><g><circle cx="0" cy="-7" r="5" fill="#f4afc9"/><circle cx="6.7" cy="-2.2" r="5" fill="#f4afc9"/><circle cx="4.1" cy="5.7" r="5" fill="#f4afc9"/><circle cx="-4.1" cy="5.7" r="5" fill="#f4afc9"/><circle cx="-6.7" cy="-2.2" r="5" fill="#f4afc9"/><circle r="3.5" fill="#f2c94c"/></g></svg> الجيل السابع: زهرة</div>
+  <div class="lrow"><svg width="26" height="20" viewBox="-14 -14 28 28"><g transform="rotate(25)"><path d="M0,-11 C7,-6 7,5 0,11 C-7,5 -7,-6 0,-11 Z" fill="#86b568" stroke="#55793f"/></g></svg> الأوراق تمثل البنات</div>
 </div>
 
 <div id="modal" class="hidden">
@@ -275,8 +270,8 @@ function resolveCollisions() {
       let d = Math.hypot(dx, dy) || 1;
       if (d > 330) { me.x = pp.x + dx / d * 330; me.y = pp.y + dy / d * 330; }
       else if (d < 58) { me.x = pp.x + dx / d * 58; me.y = pp.y + dy / d * 58; }
-      me.x = clamp(me.x, 75, W - 75);
-      me.y = clamp(me.y, 85, H - 260);
+      me.x = clamp(me.x, 90, W - 90);
+      me.y = clamp(me.y, 215, H - 280);
     }
     if (!moved) break;
   }
@@ -342,25 +337,83 @@ function assignAngles(id, a0, a1) {
 }
 
 /* ---------- الرسم ---------- */
-function branchPath(pp, cp, w) {
+const SCENE_DEFS = '<defs>' +
+  '<radialGradient id="paperGrad" cx="50%" cy="42%" r="78%">' +
+    '<stop offset="0" stop-color="#fdf9ee"/><stop offset="0.72" stop-color="#f7efdd"/><stop offset="1" stop-color="#ece0c5"/>' +
+  '</radialGradient>' +
+  '<linearGradient id="barkGrad" x1="0" y1="0" x2="1" y2="0">' +
+    '<stop offset="0" stop-color="#a97a44"/><stop offset="0.45" stop-color="#7d5122"/><stop offset="1" stop-color="#5e3a17"/>' +
+  '</linearGradient>' +
+  '<linearGradient id="branchGrad" x1="0" y1="1" x2="0" y2="0">' +
+    '<stop offset="0" stop-color="#7d5122"/><stop offset="1" stop-color="#9c6b35"/>' +
+  '</linearGradient>' +
+  '<filter id="softsh" x="-40%" y="-40%" width="180%" height="180%">' +
+    '<feDropShadow dx="0" dy="2" stdDeviation="1.8" flood-color="#3a2a10" flood-opacity="0.28"/>' +
+  '</filter>' +
+  '</defs>';
+
+function branchShape(pp, cp, w0, w1) {
   const mx = (pp.x + cp.x) / 2, my = (pp.y + cp.y) / 2;
   const dx = cp.x - pp.x, dy = cp.y - pp.y;
   const n = Math.hypot(dx, dy) || 1;
   const sgn = cp.x < pp.x ? 1 : -1;
-  const off = Math.min(30, n * 0.18) * sgn;
+  const off = Math.min(34, n * 0.22) * sgn;
   const qx = mx - dy / n * off, qy = my + dx / n * off;
-  return '<path d="M' + pp.x.toFixed(1) + ',' + pp.y.toFixed(1) +
-    ' Q' + qx.toFixed(1) + ',' + qy.toFixed(1) +
-    ' ' + cp.x.toFixed(1) + ',' + cp.y.toFixed(1) +
-    '" fill="none" stroke="#8a5a2b" stroke-width="' + w.toFixed(1) + '" stroke-linecap="round"/>';
+  const N = 7, Lp = [], Rp = [];
+  for (let i = 0; i <= N; i++) {
+    const t = i / N;
+    const x = (1 - t) * (1 - t) * pp.x + 2 * (1 - t) * t * qx + t * t * cp.x;
+    const y = (1 - t) * (1 - t) * pp.y + 2 * (1 - t) * t * qy + t * t * cp.y;
+    const tx = 2 * (1 - t) * (qx - pp.x) + 2 * t * (cp.x - qx);
+    const ty = 2 * (1 - t) * (qy - pp.y) + 2 * t * (cp.y - qy);
+    const tn = Math.hypot(tx, ty) || 1;
+    const w = (w0 + (w1 - w0) * t) / 2;
+    Lp.push((x - ty / tn * w).toFixed(1) + ',' + (y + tx / tn * w).toFixed(1));
+    Rp.push((x + ty / tn * w).toFixed(1) + ',' + (y - tx / tn * w).toFixed(1));
+  }
+  return '<path d="M' + Lp.join(' L') + ' L' + Rp.reverse().join(' L') + ' Z" fill="url(#branchGrad)"/>' +
+    '<circle cx="' + cp.x.toFixed(1) + '" cy="' + cp.y.toFixed(1) + '" r="' + (w1 / 2 + 0.6).toFixed(1) + '" fill="#8a5c2c"/>';
 }
 function branchesSVG(id) {
   let s = '';
   const pp = positions[id];
   for (const k of childrenOf(id)) {
     const cp = positions[k.id];
-    const w = Math.min(16, 2.5 + 3 * Math.sqrt(leafCount(k.id)));
-    s += branchPath(pp, cp, w) + branchesSVG(k.id);
+    const lc = leafCount(k.id);
+    const w0 = Math.min(22, 4 + 3.4 * Math.sqrt(lc));
+    const w1 = Math.max(2.6, w0 * 0.4);
+    s += branchShape(pp, cp, w0, w1) + branchesSVG(k.id);
+  }
+  return s;
+}
+function rndGen(seed) {
+  let h = 2166136261;
+  for (let i = 0; i < seed.length; i++) { h ^= seed.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return function () {
+    h = Math.imul(h ^ (h >>> 15), 2246822519);
+    h = Math.imul(h ^ (h >>> 13), 3266489917);
+    return ((h ^= h >>> 16) >>> 0) / 4294967296;
+  };
+}
+function foliageSVG() {
+  let s = '';
+  for (const p of Object.values(data.persons)) {
+    if (p.id === 'root' || childrenOf(p.id).length) continue;
+    const pos = positions[p.id];
+    if (!pos) continue;
+    const rnd = rndGen(p.id);
+    const g = genOf(p.id);
+    const k = 3 + Math.floor(rnd() * 3);
+    for (let i = 0; i < k; i++) {
+      const a = rnd() * Math.PI * 2, rr = 18 + rnd() * 22;
+      const x = pos.x + Math.cos(a) * rr, y = pos.y - 6 + Math.sin(a) * rr * 0.8;
+      if (g >= 6 && p.gender !== 'f') {
+        s += '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="' + (5 + rnd() * 6).toFixed(1) + '" fill="#f2b7cd" opacity="0.45"/>';
+      } else {
+        const rot = (rnd() * 180).toFixed(0);
+        s += '<ellipse cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" rx="8" ry="3.6" transform="rotate(' + rot + ' ' + x.toFixed(1) + ' ' + y.toFixed(1) + ')" fill="#a9c187" opacity="0.5"/>';
+      }
+    }
   }
   return s;
 }
@@ -371,57 +424,63 @@ function shapeSVG(p) {
   if (!pos) return '';
   let shape = '';
   if (p.gender === 'f') {
-    shape = '<g transform="rotate(25)"><path d="M0,-19 C13,-11 13,9 0,19 C-13,9 -13,-11 0,-19 Z" fill="#7fb069" stroke="#4e7a3a" stroke-width="1.5"/><line x1="0" y1="-14" x2="0" y2="14" stroke="#4e7a3a" stroke-width="1"/></g>';
+    shape = '<g transform="rotate(25)"><path d="M0,-19 C13,-11 13,9 0,19 C-13,9 -13,-11 0,-19 Z" fill="#86b568" stroke="#55793f" stroke-width="2"/><line x1="0" y1="-14" x2="0" y2="14" stroke="#55793f" stroke-width="1.2"/></g>';
   } else if (g === 2) {
-    shape = '<path d="M-22,10 C-34,10 -36,-4 -26,-8 C-28,-20 -12,-24 -6,-16 C-2,-26 14,-26 16,-14 C28,-16 34,-4 24,2 C24,8 18,10 12,10 Z" fill="#cfe6f5" stroke="#6f9ec0" stroke-width="1.5"/>';
+    shape = '<path d="M-22,10 C-34,10 -36,-4 -26,-8 C-28,-20 -12,-24 -6,-16 C-2,-26 14,-26 16,-14 C28,-16 34,-4 24,2 C24,8 18,10 12,10 Z" fill="#d9ecf9" stroke="#5b93bd" stroke-width="2"/>';
   } else if (g === 3) {
-    shape = '<circle r="17" fill="#ccd7e4" stroke="#7d8ea3" stroke-width="1.5"/>';
+    shape = '<circle r="18" fill="#d9e2ee" stroke="#7388a1" stroke-width="2"/>';
   } else if (g === 4) {
-    shape = '<polygon points="0,-19 16,-9 16,9 0,19 -16,9 -16,-9" fill="#f5b043" stroke="#b97a17" stroke-width="1.5"/>';
+    shape = '<polygon points="0,-19 16,-9 16,9 0,19 -16,9 -16,-9" fill="#f2a13c" stroke="#a86a12" stroke-width="2" stroke-linejoin="round"/>';
   } else if (g === 5) {
-    shape = '<rect x="-14" y="-14" width="28" height="28" rx="3" transform="rotate(8)" fill="#f6e04b" stroke="#b3a013" stroke-width="1.5"/>';
+    shape = '<rect x="-14" y="-14" width="28" height="28" rx="4" transform="rotate(8)" fill="#f4d93f" stroke="#a08c10" stroke-width="2"/>';
   } else if (g === 6) {
-    shape = '<polygon points="0,-18 18,13 -18,13" fill="#e2574c" stroke="#9e2f26" stroke-width="1.5" stroke-linejoin="round"/>';
+    shape = '<polygon points="0,-18 18,13 -18,13" fill="#d9534a" stroke="#8e2b23" stroke-width="2" stroke-linejoin="round"/>';
   } else {
-    const fill = g === 7 ? '#f2a9c4' : '#a9c8f2';
+    const fill = g === 7 ? '#f4afc9' : '#a9c8f2';
     const st = g === 7 ? '#c76d92' : '#5f83b8';
     let petals = '';
     for (let i = 0; i < 5; i++) {
       const an = rad(90 + i * 72);
       petals += '<circle cx="' + (10 * Math.cos(an)).toFixed(1) + '" cy="' + (10 * Math.sin(an)).toFixed(1) + '" r="8.5" fill="' + fill + '" stroke="' + st + '" stroke-width="1"/>';
     }
-    shape = petals + '<circle r="5.5" fill="#f6cf5c" stroke="#c79a25" stroke-width="1"/>';
+    shape = petals + '<circle r="5.5" fill="#f2c94c" stroke="#c79a25" stroke-width="1"/>';
   }
-  const ring = sel ? '<circle r="30" fill="none" stroke="#d97706" stroke-width="2.5" stroke-dasharray="5 4"/>' : '';
+  const ring = sel ? '<circle r="31" fill="none" stroke="#d97706" stroke-width="3" stroke-dasharray="6 4"/>' : '';
   return '<g class="node" data-id="' + p.id + '" transform="translate(' + pos.x.toFixed(1) + ',' + pos.y.toFixed(1) + ')">' +
-    ring + shape +
-    '<text y="34" text-anchor="middle" class="nname">' + esc(p.name) + '</text></g>';
+    ring + '<g filter="url(#softsh)">' + shape + '</g>' +
+    '<text y="36" text-anchor="middle" class="nname">' + esc(p.name) + '</text></g>';
 }
 function trunkSVG() {
   const sel = selectedId === 'root';
   const words = data.persons.root.name.split(/\s+/).filter(Boolean);
-  let names = '', y = 1440;
+  let names = '', y = 1450;
   for (const wd of words) {
     names += '<text x="' + CX + '" y="' + y + '" text-anchor="middle" class="rootname">' + esc(wd) + '</text>';
-    y += 92;
+    y += 96;
   }
   const ring = sel
-    ? '<rect x="' + (CX - 110) + '" y="1355" width="220" height="' + Math.max(130, words.length * 92 + 36) + '" fill="none" stroke="#d97706" stroke-width="3" stroke-dasharray="8 6" rx="14"/>'
+    ? '<rect x="' + (CX - 112) + '" y="1362" width="224" height="' + Math.max(130, words.length * 96 + 40) + '" fill="none" stroke="#d97706" stroke-width="3" stroke-dasharray="8 6" rx="14"/>'
     : '';
   return '<g class="node" data-id="root">' +
     '<g transform="translate(' + (CX - 800) + ',0)">' +
-    '<path d="M690,2010 C720,1955 746,1800 756,1600 C761,1470 763,1380 763,1330 L837,1330 C837,1380 839,1470 844,1600 C854,1800 880,1955 910,2010 C860,2000 830,2004 800,2004 C770,2004 740,2000 690,2010 Z" fill="url(#barkGrad)" stroke="#5e3a17" stroke-width="3"/>' +
-    '<path d="M780,1950 C782,1800 786,1600 788,1400 M818,1960 C814,1820 810,1620 808,1420" fill="none" stroke="#734a1e" stroke-width="2" opacity="0.5"/>' +
+    '<ellipse cx="800" cy="2012" rx="310" ry="24" fill="#00000014"/>' +
+    '<path d="M645,2015 C700,1995 730,1975 742,1925 C763,1835 752,1620 757,1450 C760,1385 757,1348 760,1330 L840,1330 C843,1348 840,1385 843,1450 C848,1620 837,1835 858,1925 C870,1975 900,1995 955,2015 C905,2002 862,2008 800,2008 C738,2008 695,2002 645,2015 Z" fill="url(#barkGrad)" stroke="#4c2f12" stroke-width="3"/>' +
+    '<path d="M775,1965 C779,1830 783,1640 786,1420 M822,1970 C817,1845 812,1650 809,1430 M797,1990 C798,1930 799,1870 799,1810" fill="none" stroke="#5e3a17" stroke-width="2.5" opacity="0.35"/>' +
     '</g>' +
     names + ring + '</g>';
 }
 function buildScene() {
   layout();
-  let out = '';
-  out += '<rect x="20" y="20" width="' + (W - 40) + '" height="' + (H - 40) + '" fill="#f7f2e7" stroke="#5a6b7a" stroke-width="3"/>';
-  out += '<rect x="34" y="34" width="' + (W - 68) + '" height="' + (H - 68) + '" fill="none" stroke="#8a9aa8" stroke-width="1"/>';
-  out += '<ellipse cx="' + CX + '" cy="2015" rx="250" ry="20" fill="#e4dcc8"/>';
+  let out = SCENE_DEFS;
+  out += '<rect x="14" y="14" width="' + (W - 28) + '" height="' + (H - 28) + '" fill="url(#paperGrad)" stroke="#6b4a22" stroke-width="9" rx="6"/>';
+  out += '<rect x="36" y="36" width="' + (W - 72) + '" height="' + (H - 72) + '" fill="none" stroke="#c9a25e" stroke-width="2.5" rx="3"/>';
+  out += '<rect x="46" y="46" width="' + (W - 92) + '" height="' + (H - 92) + '" fill="none" stroke="#6b4a22" stroke-width="1" opacity="0.45"/>';
+  out += '<g><rect x="' + (CX - 300) + '" y="72" width="600" height="92" rx="18" fill="#5e3f1c" stroke="#c9a25e" stroke-width="3"/>' +
+    '<rect x="' + (CX - 288) + '" y="82" width="576" height="72" rx="12" fill="none" stroke="#c9a25e" stroke-width="1" opacity="0.7"/>' +
+    '<text x="' + CX + '" y="139" text-anchor="middle" class="cartouche-t">شجرة العائلة</text></g>';
+  out += '<path d="M' + (CX - 440) + ',2018 Q' + CX + ',1950 ' + (CX + 440) + ',2018 L' + (CX + 440) + ',2034 L' + (CX - 440) + ',2034 Z" fill="#ddd0aa"/>';
   out += branchesSVG('root');
+  out += foliageSVG();
   out += trunkSVG();
   for (const p of Object.values(data.persons)) {
     if (p.id !== 'root') out += shapeSVG(p);
@@ -700,15 +759,14 @@ $('importFile').addEventListener('change', e => {
 });
 
 /* تصدير صورة */
-const BARK_DEFS = '<defs><linearGradient id="barkGrad" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#a9743c"/><stop offset="0.5" stop-color="#8a5a2b"/><stop offset="1" stop-color="#6e441d"/></linearGradient></defs>';
 $('btnPNG').addEventListener('click', () => {
   const keep = selectedId;
   selectedId = null;
   const inner = buildScene();
   selectedId = keep;
-  const style = '<style>.nname{font:13px Tajawal,sans-serif;fill:#1f2937;paint-order:stroke;stroke:#fff;stroke-width:3px}.rootname{font:700 56px "Aref Ruqaa",serif;fill:#241505}.hint{font:26px Tajawal,sans-serif;fill:#9a8f78}</style>';
+  const style = '<style>.nname{font:500 15px Tajawal,sans-serif;fill:#3b2a12;paint-order:stroke;stroke:#fdf8ec;stroke-width:4px;stroke-linejoin:round}.rootname{font:700 58px "Aref Ruqaa",serif;fill:#2b1a07}.cartouche-t{font:700 46px "Aref Ruqaa",serif;fill:#f3dfae}.hint{font:24px Tajawal,sans-serif;fill:#a3947a}</style>';
   const svgStr = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + W + ' ' + H + '" width="' + W + '" height="' + H + '">' +
-    BARK_DEFS + style +
+    style +
     '<rect width="' + W + '" height="' + H + '" fill="#efe9db"/>' + inner + '</svg>';
   const blob = new Blob([svgStr], { type: 'image/svg+xml;charset=utf-8' });
   const url = URL.createObjectURL(blob);
