@@ -163,7 +163,7 @@
 const LS_KEY = 'shajara-v3';
 const W = 1900, H = 2200, CX = 950;
 const TRUNK_TOP = { x: CX, y: 1330 };
-const STEPS = { 2: 200, 3: 170, 4: 150, 5: 132, 6: 118, 7: 106, 8: 98 };
+const STEPS = { 2: 200, 3: 190, 4: 170, 5: 148, 6: 130, 7: 115, 8: 105 };
 const SHAPE_NAMES = { 2: 'سحابة', 3: 'دائرة', 4: 'سداسي', 5: 'مربع', 6: 'مثلث', 7: 'زهرة وردية' };
 const ORDINALS = ['', 'الأول', 'الثاني', 'الثالث', 'الرابع', 'الخامس', 'السادس', 'السابع', 'الثامن', 'التاسع', 'العاشر', 'الحادي عشر', 'الثاني عشر'];
 
@@ -193,7 +193,7 @@ let movingId = null;
 let trunkHeirId = null;
 let spineIds = [];
 let spineSet = new Set();
-const SPINE_BASE_Y = 1260, SPINE_STEP = 150;
+const SPINE_BASE_Y = 1280, SPINE_STEP = 162;
 let modalMode = null;
 let view = { x: 0, y: 0, k: 0.4 };
 let userMoved = false;
@@ -270,13 +270,13 @@ function layout() {
     if (heirId === null) {
       // تاج قمة الجذع
       const n = kids.length;
-      const spread = Math.min(130, 26 * Math.max(n - 1, 1));
+      const spread = Math.min(178, 36 * Math.max(n - 1, 1));
       let ang = 90 + spread / 2;
       const st = n > 1 ? spread / (n - 1) : 0;
       kids.forEach((k, j) => {
-        const r = 150 + (j % 2) * 55;
+        const r = 215 + (j % 2) * 75;
         positions[k.id] = { x: CX + r * Math.cos(rad(ang)), y: py - r * Math.sin(rad(ang)) };
-        assignAngles(k.id, ang - 22, ang + 22);
+        assignAngles(k.id, ang - 28, ang + 28);
         ang -= st;
       });
       continue;
@@ -287,12 +287,21 @@ function layout() {
     const seq = [148, 32, 163, 17, 120, 60, 176, 4];
     leafKids.forEach((k, j) => {
       const ang = seq[j % seq.length];
-      const r = 88 + Math.floor(j / seq.length) * 50 + (j % 2) * 22;
+      const r = 92 + Math.floor(j / seq.length) * 50 + (j % 2) * 24;
       positions[k.id] = { x: CX + r * Math.cos(rad(ang)), y: py - r * Math.sin(rad(ang)) };
     });
-    // الفروع الكبيرة: أسافين يمين/يسار بالتناوب على ارتفاع العقدة
-    const rightKids = [], leftKids = [];
-    branchKids.forEach((k, j) => (j % 2 === 0 ? leftKids : rightKids).push(k));
+    // الفروع الكبيرة: أسافين يمين/يسار مع موازنة الجانبين
+    let rightKids = [], leftKids = [];
+    if (i === 0) {
+      branchKids.forEach((k, j) => (j % 2 === 0 ? leftKids : rightKids).push(k));
+    } else {
+      const sorted = [...branchKids].sort((a, b) => leafCount(b.id) - leafCount(a.id));
+      let wR = 0, wL = 0;
+      for (const k of sorted) {
+        if (wL <= wR) { leftKids.push(k); wL += leafCount(k.id) + 2; }
+        else { rightKids.push(k); wR += leafCount(k.id) + 2; }
+      }
+    }
     placeWedges(rightKids, py, i, false);
     placeWedges(leftKids, py, i, true);
   }
@@ -300,16 +309,16 @@ function layout() {
 }
 function placeWedges(kidsArr, py, lvl, isLeft) {
   if (!kidsArr.length) return;
-  const tilt = Math.min(60, lvl === 0 ? 34 : 16 + lvl * 8);
+  const tilt = lvl === 0 ? 45 : Math.min(78, 24 + lvl * 15);
   const totalW = kidsArr.reduce((s, k) => s + leafCount(k.id) + 2, 0);
-  const range = Math.min(95, Math.max(38, totalW * 2.6));
+  const range = lvl === 0 ? Math.min(125, Math.max(70, totalW * 3.2)) : Math.min(118, Math.max(60, totalW * 3));
   let a = tilt - range / 2;
   for (const k of kidsArr) {
     const span = range * (leafCount(k.id) + 2) / totalW;
     let a0 = a, a1 = a + span;
     if (isLeft) { const t0 = a0; a0 = 180 - a1; a1 = 180 - t0; }
     const mid = (a0 + a1) / 2;
-    const r = lvl === 0 ? 235 : 205;
+    const r = lvl === 0 ? 300 : 250;
     positions[k.id] = { x: CX + r * Math.cos(rad(mid)), y: py - r * Math.sin(rad(mid)) };
     assignAngles(k.id, a0, a1);
     a += span;
@@ -317,7 +326,7 @@ function placeWedges(kidsArr, py, lvl, isLeft) {
 }
 function resolveCollisions() {
   const ids = Object.keys(positions).filter(id => id !== 'root');
-  const MIN = 56;
+  const MIN = 54;
   for (let it = 0; it < 60; it++) {
     let moved = false;
     for (let i = 0; i < ids.length; i++) {
@@ -342,10 +351,10 @@ function resolveCollisions() {
       if (!pp) continue;
       let dx = me.x - pp.x, dy = me.y - pp.y;
       let d = Math.hypot(dx, dy) || 1;
-      if (d > 250) { me.x = pp.x + dx / d * 250; me.y = pp.y + dy / d * 250; }
+      if (d > 310) { me.x = pp.x + dx / d * 310; me.y = pp.y + dy / d * 310; }
       else if (d < 58) { me.x = pp.x + dx / d * 58; me.y = pp.y + dy / d * 58; }
       me.x = clamp(me.x, 90, W - 90);
-      me.y = clamp(me.y, 215, H - 280);
+      me.y = clamp(me.y, 195, H - 280);
     }
     // تثبيت عقد العمود الفقري على محور الجذع
     for (let si = 1; si < spineIds.length; si++) {
@@ -509,12 +518,12 @@ function foliageSVG() {
     const terminal = childrenOf(p.id).length === 0;
     if (terminal && g >= 6 && p.gender !== 'f') {
       // كتلة زهور وردية كثيفة حول أطراف الأغصان كما في اللوحة
-      const k = 12 + Math.floor(rnd() * 6);
+      const k = 15 + Math.floor(rnd() * 7);
       for (let i = 0; i < k; i++) {
-        const a = rnd() * Math.PI * 2, rr = 8 + rnd() * 32;
+        const a = rnd() * Math.PI * 2, rr = 8 + rnd() * 40;
         const x = pos.x + Math.cos(a) * rr, y = pos.y - 6 + Math.sin(a) * rr * 0.85;
         const c = pinks[Math.floor(rnd() * pinks.length)];
-        s += '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="' + (5.5 + rnd() * 7).toFixed(1) + '" fill="' + c + '" opacity="' + (0.5 + rnd() * 0.3).toFixed(2) + '"/>';
+        s += '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="' + (6 + rnd() * 8).toFixed(1) + '" fill="' + c + '" opacity="' + (0.5 + rnd() * 0.3).toFixed(2) + '"/>';
       }
     } else if (terminal) {
       const k = 4 + Math.floor(rnd() * 3);
@@ -580,25 +589,25 @@ function trunkSVG() {
   const ring = sel
     ? '<rect x="' + (CX - 112) + '" y="1362" width="224" height="' + Math.max(130, words.length * 96 + 40) + '" fill="none" stroke="#d97706" stroke-width="3" stroke-dasharray="8 6" rx="14"/>'
     : '';
-  // جذع ممتد من القاعدة حتى قمة العمود، يتناقص عرضه تدريجياً
+  // جذع ممتد من القاعدة حتى قمة العمود، عريض يتناقص تدريجياً كما في اللوحة
   const baseY = 1995;
-  const topY = spineIds.length > 1 ? SPINE_BASE_Y - (spineIds.length - 2) * SPINE_STEP - 55 : 1330;
-  const hw = yy => 26 + (yy - topY) / (baseY - topY) * 76;
+  const topY = spineIds.length > 1 ? SPINE_BASE_Y - (spineIds.length - 2) * SPINE_STEP - 60 : 1330;
+  const hw = yy => 42 + Math.sqrt(Math.max(0, (yy - topY) / (baseY - topY))) * 76;
   const stations = [];
-  for (let yy = baseY; yy > topY; yy -= 130) stations.push(yy);
+  for (let yy = baseY; yy > topY; yy -= 120) stations.push(yy);
   stations.push(topY);
-  let left = 'M' + (CX - 195) + ',2015 C' + (CX - 130) + ',1996 ' + (CX - hw(baseY) - 10) + ',1975 ' + (CX - hw(baseY)) + ',1940';
-  for (const yy of stations) { if (yy < 1940) left += ' L' + (CX - hw(yy)).toFixed(1) + ',' + yy; }
+  let left = 'M' + (CX - 225) + ',2015 C' + (CX - 160) + ',1996 ' + (CX - hw(baseY) - 12) + ',1975 ' + (CX - hw(baseY)) + ',1935';
+  for (const yy of stations) { if (yy < 1935) left += ' L' + (CX - hw(yy)).toFixed(1) + ',' + yy; }
   let right = 'L' + (CX + hw(topY)).toFixed(1) + ',' + topY;
-  for (let i = stations.length - 1; i >= 0; i--) { const yy = stations[i]; if (yy < 1940) right += ' L' + (CX + hw(yy)).toFixed(1) + ',' + yy; }
-  right += ' C' + (CX + hw(baseY) + 10) + ',1975 ' + (CX + 130) + ',1996 ' + (CX + 195) + ',2015';
-  right += ' C' + (CX + 120) + ',2004 ' + (CX + 60) + ',2008 ' + CX + ',2008';
-  right += ' C' + (CX - 60) + ',2008 ' + (CX - 120) + ',2004 ' + (CX - 195) + ',2015 Z';
-  const bark = 'M' + (CX - 28) + ',1950 C' + (CX - 24) + ',1750 ' + (CX - 18) + ',1400 ' + (CX - 12) + ',' + (topY + 90) +
-    ' M' + (CX + 30) + ',1955 C' + (CX + 25) + ',1760 ' + (CX + 18) + ',1420 ' + (CX + 12) + ',' + (topY + 110) +
+  for (let i = stations.length - 1; i >= 0; i--) { const yy = stations[i]; if (yy < 1935) right += ' L' + (CX + hw(yy)).toFixed(1) + ',' + yy; }
+  right += ' C' + (CX + hw(baseY) + 12) + ',1975 ' + (CX + 160) + ',1996 ' + (CX + 225) + ',2015';
+  right += ' C' + (CX + 130) + ',2004 ' + (CX + 65) + ',2008 ' + CX + ',2008';
+  right += ' C' + (CX - 65) + ',2008 ' + (CX - 130) + ',2004 ' + (CX - 225) + ',2015 Z';
+  const bark = 'M' + (CX - 40) + ',1950 C' + (CX - 34) + ',1750 ' + (CX - 26) + ',1400 ' + (CX - 18) + ',' + (topY + 90) +
+    ' M' + (CX + 42) + ',1955 C' + (CX + 36) + ',1760 ' + (CX + 26) + ',1420 ' + (CX + 18) + ',' + (topY + 110) +
     ' M' + (CX - 2) + ',1985 C' + (CX - 1) + ',1900 ' + CX + ',1840 ' + CX + ',1790';
   return '<g class="node" data-id="root">' +
-    '<ellipse cx="' + CX + '" cy="2012" rx="330" ry="26" fill="#00000014"/>' +
+    '<ellipse cx="' + CX + '" cy="2012" rx="350" ry="26" fill="#00000014"/>' +
     '<path d="' + left + ' ' + right + '" fill="url(#barkGrad)" stroke="#4c2f12" stroke-width="3"/>' +
     '<path d="' + bark + '" fill="none" stroke="#5e3a17" stroke-width="2.5" opacity="0.35"/>' +
     names + ring + '</g>';
