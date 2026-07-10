@@ -516,7 +516,7 @@ function foliageSVG() {
     const rnd = rndGen(p.id);
     const g = genOf(p.id);
     const terminal = childrenOf(p.id).length === 0;
-    if (terminal && g >= 6 && p.gender !== 'f') {
+    if (terminal && g >= 5 && p.gender !== 'f') {
       // كتلة زهور وردية كثيفة حول أطراف الأغصان كما في اللوحة
       const k = 15 + Math.floor(rnd() * 7);
       for (let i = 0; i < k; i++) {
