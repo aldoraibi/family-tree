@@ -309,16 +309,16 @@ function layout() {
 }
 function placeWedges(kidsArr, py, lvl, isLeft) {
   if (!kidsArr.length) return;
-  const tilt = lvl === 0 ? 45 : Math.min(78, 24 + lvl * 15);
+  const tilt = lvl === 0 ? 25 : Math.min(78, 24 + lvl * 15);
   const totalW = kidsArr.reduce((s, k) => s + leafCount(k.id) + 2, 0);
-  const range = lvl === 0 ? Math.min(125, Math.max(70, totalW * 3.2)) : Math.min(118, Math.max(60, totalW * 3));
+  const range = lvl === 0 ? Math.min(135, Math.max(90, totalW * 3.4)) : Math.min(118, Math.max(60, totalW * 3));
   let a = tilt - range / 2;
   for (const k of kidsArr) {
     const span = range * (leafCount(k.id) + 2) / totalW;
     let a0 = a, a1 = a + span;
     if (isLeft) { const t0 = a0; a0 = 180 - a1; a1 = 180 - t0; }
     const mid = (a0 + a1) / 2;
-    const r = lvl === 0 ? 300 : 250;
+    const r = lvl === 0 ? 330 : 250;
     positions[k.id] = { x: CX + r * Math.cos(rad(mid)), y: py - r * Math.sin(rad(mid)) };
     assignAngles(k.id, a0, a1);
     a += span;
@@ -351,7 +351,7 @@ function resolveCollisions() {
       if (!pp) continue;
       let dx = me.x - pp.x, dy = me.y - pp.y;
       let d = Math.hypot(dx, dy) || 1;
-      if (d > 310) { me.x = pp.x + dx / d * 310; me.y = pp.y + dy / d * 310; }
+      if (d > 345) { me.x = pp.x + dx / d * 345; me.y = pp.y + dy / d * 345; }
       else if (d < 58) { me.x = pp.x + dx / d * 58; me.y = pp.y + dy / d * 58; }
       me.x = clamp(me.x, 90, W - 90);
       me.y = clamp(me.y, 195, H - 280);
@@ -525,21 +525,27 @@ function foliageSVG() {
         const c = pinks[Math.floor(rnd() * pinks.length)];
         s += '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="' + (6 + rnd() * 8).toFixed(1) + '" fill="' + c + '" opacity="' + (0.5 + rnd() * 0.3).toFixed(2) + '"/>';
       }
+      for (let i = 0; i < 3; i++) {
+        const a = rnd() * Math.PI * 2, rr = 24 + rnd() * 26;
+        const x = pos.x + Math.cos(a) * rr, y = pos.y + Math.sin(a) * rr * 0.8;
+        const rot = (rnd() * 180).toFixed(0);
+        s += '<ellipse cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" rx="9" ry="4" transform="rotate(' + rot + ' ' + x.toFixed(1) + ' ' + y.toFixed(1) + ')" fill="#8fb573" opacity="0.6"/>';
+      }
     } else if (terminal) {
-      const k = 4 + Math.floor(rnd() * 3);
+      const k = 5 + Math.floor(rnd() * 3);
       for (let i = 0; i < k; i++) {
         const a = rnd() * Math.PI * 2, rr = 16 + rnd() * 20;
         const x = pos.x + Math.cos(a) * rr, y = pos.y - 5 + Math.sin(a) * rr * 0.8;
         const rot = (rnd() * 180).toFixed(0);
-        s += '<ellipse cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" rx="9" ry="4" transform="rotate(' + rot + ' ' + x.toFixed(1) + ' ' + y.toFixed(1) + ')" fill="#a9c187" opacity="0.55"/>';
+        s += '<ellipse cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" rx="9" ry="4" transform="rotate(' + rot + ' ' + x.toFixed(1) + ' ' + y.toFixed(1) + ')" fill="#8fb573" opacity="0.6"/>';
       }
     } else {
       // ورقتان صغيرتان عند كل مفترق غصن
-      for (let i = 0; i < 2; i++) {
-        const a = rnd() * Math.PI * 2, rr = 20 + rnd() * 14;
+      for (let i = 0; i < 5; i++) {
+        const a = rnd() * Math.PI * 2, rr = 20 + rnd() * 20;
         const x = pos.x + Math.cos(a) * rr, y = pos.y + Math.sin(a) * rr * 0.7;
         const rot = (rnd() * 180).toFixed(0);
-        s += '<ellipse cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" rx="8" ry="3.6" transform="rotate(' + rot + ' ' + x.toFixed(1) + ' ' + y.toFixed(1) + ')" fill="#a9c187" opacity="0.45"/>';
+        s += '<ellipse cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" rx="8" ry="3.6" transform="rotate(' + rot + ' ' + x.toFixed(1) + ' ' + y.toFixed(1) + ')" fill="#8fb573" opacity="0.5"/>';
       }
     }
   }
